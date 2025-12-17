@@ -59,8 +59,15 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 | `title`       | String   | Task summary                      |
 | `description` | String   | Markdown supported                |
 | `priority`    | String   | ENUM: ['low', 'medium', 'high']   |
-| `assignee_id` | ObjectId | Ref: Users (Nullable)             |
+| `assignee_id` | ObjectId | Ref: Users (Nullable, Single assignee only)             |
 | `order`       | Number   | For drag-and-drop positioning     |
+
+### 2.2: Indexing Strategy
+* **users.email** - Unique index
+* **columns.board_id** - Standard index
+* **tasks.column_id** - Standard index
+* **tasks.board_id** - Standard index
+* No **compound indexes** in Sprint 1
 
 ---
 
@@ -92,8 +99,8 @@ All error responses will follow this format:
 }
 ```
 
-#### 3.1.3. Authentication
-Endpoints marked with `[Auth]` require a Bearer Token in the header: `Authorization: Bearer <your_jwt_token>`
+#### 3.1.3. Authentication Logic
+Endpoints marked with `[Auth]` require JWT in Authorization header: `Authorization: Bearer <token>`. Token stored in frontend memory (not localStorage for XSS protection).
 
 ### 3.2. Authentication
 #### 3.2.1 Register User
@@ -258,13 +265,23 @@ DELETE `/tasks/:id [Auth]`
 | `404`    | Not Found     | ID does not exist               |
 | `500`    | Server Error     | Something went wrong on the backend               |
 
+### 3.6: Rate Limiting
+* **Global limit:** 100 requests per 15 minutes per IP
+* Applied to all `/api/*` routes
+* Returns 429 status code when exceeded
+
+### 3.7: CORS Policy
+* **Allowed origins:** `http://localhost:3000`, `https://your-app.vercel.app`
+* **Credentials:** true
+* **Methods:** GET, POST, PATCH, DELETE
+
 ---
 
 ## 4. Security Architecture
 
 ### 4.1 Authentication Strategy
 * **JWT (Access Token):** Short-lived (15 mins). Stored in memory (Frontend).
-* **Refresh Token:** Long-lived (7 days). Stored in **HTTP-Only, Secure Cookie**. This prevents XSS attacks from stealing the session.
+* **Refresh Token:** JWT Access Token only. 7-day expiration. Stored in frontend memory. User must re-login after expiration or page refresh. **HTTP-Only, Secure Cookie**. This prevents XSS attacks from stealing the session.
 
 ### 4.2 RBAC Matrix (Permissions)
 | Action | Admin | Board Owner | Member | Public |
@@ -275,3 +292,9 @@ DELETE `/tasks/:id [Auth]`
 | **Move Tasks** | ✅ | ✅ | ✅ | ❌ |
 | **Edit Task Content**| ✅ | ✅ | ✅ | ❌ |
 | **Delete Task** | ✅ | ✅ | ❌ | ❌ |
+
+### 4.3: Conflict Resolution Strategy
+* **Strategy:** "Last Write Wins"
+* No version control or operational transformation
+* Frontend implements optimistic updates
+* On API failure, revert UI state and show toast notification
