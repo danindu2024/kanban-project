@@ -257,3 +257,21 @@ DELETE `/tasks/:id [Auth]`
 | `403`          | Forbidden   | Valid token, but not allowed (e.g., deleting someone else's board) |
 | `404`    | Not Found     | ID does not exist               |
 | `500`    | Server Error     | Something went wrong on the backend               |
+
+---
+
+## 4. Security Architecture
+
+### 4.1 Authentication Strategy
+* **JWT (Access Token):** Short-lived (15 mins). Stored in memory (Frontend).
+* **Refresh Token:** Long-lived (7 days). Stored in **HTTP-Only, Secure Cookie**. This prevents XSS attacks from stealing the session.
+
+### 4.2 RBAC Matrix (Permissions)
+| Action | Admin | Board Owner | Member | Public |
+| :--- | :---: | :---: | :---: | :---: |
+| **Create Board** | ✅ | ✅ | ❌ | ❌ |
+| **Delete Board** | ✅ | ✅ | ❌ | ❌ |
+| **Invite Users** | ✅ | ✅ | ❌ | ❌ |
+| **Move Tasks** | ✅ | ✅ | ✅ | ❌ |
+| **Edit Task Content**| ✅ | ✅ | ✅ | ❌ |
+| **Delete Task** | ✅ | ✅ | ❌ | ❌ |
