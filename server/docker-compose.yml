@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  # This is our Database Service
+  mongodb:
+    image: mongo:latest
+    container_name: flowstate_db
+    restart: always
+    # Map the container's port to your machine's port
+    ports:
+      - "27017:27017"
+    # Create a volume so your data persists even if you stop Docker
+    volumes:
+      - mongo-data:/data/db
+    # Basic environment variables for the Mongo container
+    environment:
+      - MONGO_INITDB_DATABASE=flowstate
+
+# Define the volume managed by Docker
+volumes:
+  mongo-data:
