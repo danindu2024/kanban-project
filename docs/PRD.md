@@ -101,7 +101,19 @@ To build "FlowState": a streamlined, professional-grade Kanban board tailored fo
 
 ## 5. Risks & Assumptions
 * **Assumption:** We are using a "Monorepo" structure for easier dependency management during development.
-* **Risk:** Drag-and-drop libraries can be tricky with React 18 Strict Mode; we may need to use a specific library wrapper.
+* **Risk:** Drag-and-drop libraries can be tricky with React 18 Strict Mode.
+**Mitigation:** we may need to use a specific library wrapper.
+* **Risk:** Solo developer velocity - no code reviews may introduce bugs
+**Mitigation:** Comprehensive unit tests and ESLint enforcement
+
+* **Risk:** "Last Write Wins" may frustrate users in Phase 2 real-time collaboration
+**Mitigation:** Document this limitation clearly; plan conflict resolution for Phase 2
+
+* **Risk:** 7-day token expiration forces re-login, poor UX
+**Mitigation:** Acceptable for MVP; implement refresh tokens in Sprint 2
+
+* **Risk:** No staging environment means bugs go directly to production
+**Mitigation:** Robust local testing + feature flags for risky changes
 
 ### 5.1: Technology Decisions
 * `Hosting:` Render.com (Backend) + Vercel (Frontend)
@@ -110,3 +122,4 @@ To build "FlowState": a streamlined, professional-grade Kanban board tailored fo
 * `Rate Limiting:` express-rate-limit (100 req/15min)
 * `Error Notifications:` react-hot-toast or sonner
 * `Environments:` Local + Production only
+
