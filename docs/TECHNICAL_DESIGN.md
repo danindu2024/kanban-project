@@ -68,27 +68,3 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 * **tasks.column_id** - Standard index
 * **tasks.board_id** - Standard index
 * No **compound indexes** in Sprint 1
-
----
-
-## 4. Security Architecture
-
-### 4.1 Authentication Strategy
-* **JWT (Access Token):** Short-lived (15 mins). Stored in memory (Frontend).
-* **Refresh Token:** JWT Access Token only. 7-day expiration. Stored in frontend memory. User must re-login after expiration or page refresh. **HTTP-Only, Secure Cookie**. This prevents XSS attacks from stealing the session.
-
-### 4.2 RBAC Matrix (Permissions)
-| Action | Admin | Board Owner | Member | Public |
-| :--- | :---: | :---: | :---: | :---: |
-| **Create Board** | ✅ | ✅ | ❌ | ❌ |
-| **Delete Board** | ✅ | ✅ | ❌ | ❌ |
-| **Invite Users** | ✅ | ✅ | ❌ | ❌ |
-| **Move Tasks** | ✅ | ✅ | ✅ | ❌ |
-| **Edit Task Content**| ✅ | ✅ | ✅ | ❌ |
-| **Delete Task** | ✅ | ✅ | ❌ | ❌ |
-
-### 4.3: Conflict Resolution Strategy
-* **Strategy:** "Last Write Wins"
-* No version control or operational transformation
-* Frontend implements optimistic updates
-* On API failure, revert UI state and show toast notification
