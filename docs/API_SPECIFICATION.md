@@ -124,7 +124,7 @@ GET `/boards/:id [Auth]`
 DELETE `/boards/:id [Auth]`
 
 * **Permission:** Only the Board Owner or Admin can delete.
-
+hi
 ## 4. Columns
 ### 4.1 Create Column
 POST `/columns [Auth]`
