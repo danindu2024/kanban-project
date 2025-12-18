@@ -1,4 +1,4 @@
-# Infrastructure Document (TDD)
+# Infrastructure Document
 
 **Project:** FlowState (Enterprise Kanban)
 **Version:** 1.0
