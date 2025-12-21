@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { RegisterUserUseCase } from '../use-cases/auth/RegisterUserUseCase';
+import { LoginUserUseCase } from '../use-cases/auth/LoginUserUseCase';
 
 const registerUser = async (req: Request, res: Response) => {
   try {
@@ -31,4 +32,26 @@ const registerUser = async (req: Request, res: Response) => {
   }
 };
 
-export { registerUser };
+const loginUser = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res.status(400).json({ success: false, message: 'Please provide email and password' });
+      return;
+    }
+
+    const loginUseCase = new LoginUserUseCase();
+    const result = await loginUseCase.execute({ email, password });
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+
+  } catch (error) {
+    res.status(401).json({ success: false, message: (error as Error).message });
+  }
+};
+
+export { registerUser, loginUser };
