@@ -2,7 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  passwordHash: string;
+  password_hash: string;
   role: 'admin' | 'user';
-  createdAt: Date;
+  created_at: Date;
 }
