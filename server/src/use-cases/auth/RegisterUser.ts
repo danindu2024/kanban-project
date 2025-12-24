@@ -1,5 +1,4 @@
 import bcrypt from 'bcryptjs';
-// CHANGE 1: Import the Interface (Domain), NOT the Implementation (Infrastructure)
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { generateToken } from '../../utils/jwt';
 
@@ -9,16 +8,23 @@ interface RegisterRequest {
   password: string;
 }
 
+interface RegisterResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  token: string;
+}
+
 export class RegisterUserUseCase {
   private userRepository: IUserRepository;
 
-  // CHANGE 2: Use Constructor Injection
-  // We ask for "ANY" repository that satisfies the contract, not specifically the Mongoose one.
+  // Use Constructor Injection
   constructor(userRepository: IUserRepository) {
     this.userRepository = userRepository;
   }
 
-  async execute({ name, email, password }: RegisterRequest) {
+  async execute({ name, email, password }: RegisterRequest): Promise<RegisterResponse> {
     const userExists = await this.userRepository.findByEmail(email);
     if (userExists) {
       throw new Error('User already exists');
@@ -34,8 +40,7 @@ export class RegisterUserUseCase {
       role: 'user',
     });
 
-    // CHANGE 3: Use the domain entity ID, not the database _id
-    // Your repository mapper converts _id -> id. Use that.
+    // generate token
     const token = generateToken(newUser.id); 
 
     return {
