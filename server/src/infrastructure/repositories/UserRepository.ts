@@ -12,7 +12,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async findById(id: string): Promise<UserEntity | null> {
-    const userDoc = await User.findById(id).select('-password_hash');
+    const userDoc = await User.findById(id);
     if (!userDoc) return null;
     
     return this.mapToEntity(userDoc);
