@@ -1,46 +1,79 @@
-import { Request, Response } from "express";
+import { Response, NextFunction } from "express";
+import { AuthRequest } from "../middleware/authMiddleware";
 import { CreateBoard } from "../use-cases/boards/CreateBoard";
 import { GetUserBoards } from "../use-cases/boards/GetUserBoards";
-import { BoardRepository } from "../infrastructure/repositories/BoardRepository";
+import { IBoardRepository } from "../domain/repositories/IBoardRepository";
 
-// Dependency Injection (Manually done here for simplicity)
-const boardRepository = new BoardRepository();
-const createBoardUseCase = new CreateBoard(boardRepository);
-const getUserBoardsUseCase = new GetUserBoards(boardRepository);
+export class BoardController {
+  private createBoardUseCase: CreateBoard;
+  private getUserBoardsUseCase: GetUserBoards;
 
-export const createBoard = async (req: Request, res: Response) => {
-  try {
-    const { title } = req.body;
-    // Assuming authMiddleware populates req.user
-    const userId = (req as any).user.id; 
-
-    const board = await createBoardUseCase.execute({ title, ownerId: userId });
-
-    res.status(201).json({
-      success: true,
-      data: board,
-    });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      error: { message: error.message },
-    });
+  constructor(boardRepository: IBoardRepository) {
+    this.createBoardUseCase = new CreateBoard(boardRepository);
+    this.getUserBoardsUseCase = new GetUserBoards(boardRepository);
   }
-};
 
-export const getBoards = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).user.id;
-    const boards = await getUserBoardsUseCase.execute(userId);
+  createBoard = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { title } = req.body;
 
-    res.status(200).json({
-      success: true,
-      data: boards,
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: { message: "Server Error" },
-    });
-  }
-};
+      if (!title) {
+        res.status(400).json({
+          success: false,
+          message: "Please provide a title",
+        });
+        return;
+      }
+
+      // req.user is set by authMiddleware
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: "User not authenticated",
+        });
+        return;
+      }
+
+      const board = await this.createBoardUseCase.execute({ 
+        title, 
+        ownerId: userId 
+      });
+
+      res.status(201).json({
+        success: true,
+        data: board,
+      });
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+      res.status(400).json({
+        success: false,
+        message: errorMessage,
+      });
+    }
+  };
+
+  getBoards = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: "User not authenticated",
+        });
+        return;
+      }
+
+      const boards = await this.getUserBoardsUseCase.execute(userId);
+
+      res.status(200).json({
+        success: true,
+        data: boards,
+      });
+    } catch (error) {
+      next(error); // Pass to error handler middleware
+    }
+  };
+}
