@@ -1,15 +1,22 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';
+import env from './utils/env';
 import app from './app';
 import connectDB from './infrastructure/db';
 
-// Load env vars
-dotenv.config();
+const startServer = async () => {
+  try {
+    await connectDB(); 
+    console.log('Database connected successfully');
 
-// Connect to database
-connectDB();
+    app.listen(env.PORT, () => {
+      console.log(`🚀 Server running in ${env.NODE_ENV} mode on port ${env.PORT}`);
+    });
 
-const PORT = process.env.PORT || 5000;
+  } catch (error) {
+    console.error('Critical Error: Failed to start server');
+    console.error(error);
+    process.exit(1);
+  }
+};
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
+startServer();
