@@ -2,14 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import { RegisterUserUseCase } from '../use-cases/auth/RegisterUser';
 import { LoginUserUseCase } from '../use-cases/auth/LoginUser';
 import { IUserRepository } from '../domain/repositories/IUserRepository';
-import { validateHeaderName } from 'node:http';
+import { GetCurrentUserUseCase } from '../use-cases/auth/GetCurrentUser';
+import { AuthRequest } from '../middleware/authMiddleware';
 export class AuthController {
   private registerUseCase: RegisterUserUseCase;
   private loginUseCase: LoginUserUseCase;
+  private getCurrentUserUseCase: GetCurrentUserUseCase;
 
   constructor(userRepository: IUserRepository) {
     this.registerUseCase = new RegisterUserUseCase(userRepository);
     this.loginUseCase = new LoginUserUseCase(userRepository);
+    this.getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
   }
 
   registerUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -51,4 +54,26 @@ export class AuthController {
       next(error);
     }
   };
+
+  getCurrentUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'User not authenticated' });
+        return;
+      }
+
+      const user = await this.getCurrentUserUseCase.execute(userId);
+      res.status(200).json({ success: true, data: user });
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+
+      if (errorMessage === 'User not found') {
+        res.status(404).json({ success: false, message: errorMessage });
+        return;
+      }
+      next(error);
+    }
+  };  
 }
