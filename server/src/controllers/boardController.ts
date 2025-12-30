@@ -3,6 +3,8 @@ import { AuthRequest } from "../middleware/authMiddleware";
 import { CreateBoard } from "../use-cases/boards/CreateBoard";
 import { GetUserBoards } from "../use-cases/boards/GetUserBoards";
 import { IBoardRepository } from "../domain/repositories/IBoardRepository";
+import { AppError } from '../utils/AppError';
+import { ErrorCodes } from '../constants/errorCodes';
 
 export class BoardController {
   private createBoardUseCase: CreateBoard;
@@ -20,7 +22,10 @@ export class BoardController {
       if (!title) {
         res.status(400).json({
           success: false,
-          message: "Please provide a title",
+          error: {
+            code: 'VAL_001',
+            message: 'Please provide a title'
+          }
         });
         return;
       }
@@ -31,7 +36,10 @@ export class BoardController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          error: {
+            code: 'AUTH_003',
+            message: 'User not authenticated'
+          }
         });
         return;
       }
@@ -46,11 +54,7 @@ export class BoardController {
         data: board,
       });
     } catch (error) {
-      const errorMessage = (error as Error).message;
-      res.status(400).json({
-        success: false,
-        message: errorMessage,
-      });
+        next(error);
     }
   };
 
@@ -61,7 +65,10 @@ export class BoardController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          error: {
+            code: 'AUTH_003',
+            message: 'User not authenticated'
+          }
         });
         return;
       }
@@ -73,7 +80,7 @@ export class BoardController {
         data: boards,
       });
     } catch (error) {
-      next(error); // Pass to error handler middleware
+      next(error);
     }
   };
 }

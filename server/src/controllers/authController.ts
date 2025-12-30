@@ -19,7 +19,13 @@ export class AuthController {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      res.status(400).json({ success: false, message: 'Please provide all fields' });
+      res.status(400).json({ 
+        success: false, 
+        error: {
+          code: 'VAL_001',
+          message: 'Please provide all fields'
+        }
+      });
       return;
     }
 
@@ -27,11 +33,7 @@ export class AuthController {
       const user = await this.registerUseCase.execute({ name, email, password });
       res.status(201).json({ success: true, data: user });
     } catch (error) {
-      if ((error as Error).message === 'User already exists') {
-        res.status(409).json({ success: false, message: 'User already exists' });
-        return;
-      }
-      next(error);
+        next(error);
     }
   };
 
@@ -39,7 +41,13 @@ export class AuthController {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      res.status(400).json({ success: false, message: 'Please provide email and password' });
+      res.status(400).json({ 
+        success: false, 
+        error: {
+          code: 'VAL_001',
+          message: 'Please provide email and password'
+        }
+      });
       return;
     }
 
@@ -47,11 +55,7 @@ export class AuthController {
       const result = await this.loginUseCase.execute({ email, password });
       res.status(200).json({ success: true, data: result });
     } catch (error) {
-      if ((error as Error).message === 'Invalid credentials') {
-        res.status(401).json({ success: false, message: 'Please provide valid credentials' });
-        return;
-      }
-      next(error);
+        next(error);
     }
   };
 
@@ -60,20 +64,20 @@ export class AuthController {
       const userId = req.user?.id;
 
       if (!userId) {
-        res.status(401).json({ success: false, message: 'User not authenticated' });
+        res.status(401).json({ 
+          success: false, 
+          error: {
+            code: 'AUTH_003',
+            message: 'User not authenticated'
+          }
+        });
         return;
       }
 
       const user = await this.getCurrentUserUseCase.execute(userId);
       res.status(200).json({ success: true, data: user });
     } catch (error) {
-      const errorMessage = (error as Error).message;
-
-      if (errorMessage === 'User not found') {
-        res.status(404).json({ success: false, message: errorMessage });
-        return;
-      }
-      next(error);
+        next(error);
     }
   };  
 }

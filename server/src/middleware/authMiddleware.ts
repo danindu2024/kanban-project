@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import env from '../utils/env';
+import { AppError } from '../utils/AppError';
+import { ErrorCodes } from '../constants/errorCodes';
 
 interface JwtPayload {
   id: string;
@@ -19,14 +21,14 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     }
 
     if (!token) {
-      res.status(401).json({ success: false, message: 'Not authorized, no token' });
-      return;
+      return next(new AppError(ErrorCodes.TOKEN_INVALID, 'Not authorized, no token', 401));
     }
 
     const decoded = jwt.verify(token, env.JWT_SECRET as string) as JwtPayload;
     req.user = { id: decoded.id };
     next();
+
   } catch (error) {
-    res.status(401).json({ success: false, message: 'Not authorized, token failed' });
+    return next(new AppError(ErrorCodes.TOKEN_INVALID, 'Not authorized, token failed', 401));
   }
 };

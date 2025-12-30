@@ -1,4 +1,6 @@
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
+import { AppError } from '../../utils/AppError';
+import { ErrorCodes } from '../../constants/errorCodes';
 
 interface GetCurrentUserResponseDTO {
   id: string;
@@ -18,7 +20,7 @@ export class GetCurrentUserUseCase {
     const user = await this.userRepository.findById(userId);
     
     if (!user) {
-      throw new Error('User not found');
+      throw new AppError(ErrorCodes.USER_NOT_FOUND, 'User not found', 404);
     }
 
     return {
