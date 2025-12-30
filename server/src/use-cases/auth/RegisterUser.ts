@@ -4,13 +4,13 @@ import { generateToken } from '../../utils/jwt';
 import { AppError } from '../../utils/AppError';
 import { ErrorCodes } from '../../constants/errorCodes';
 
-interface RegisterRequest {
+interface RegisterRequestDTO {
   name: string;
   email: string;
   password: string;
 }
 
-interface RegisterResponse {
+interface RegisterResponseDTO {
   id: string;
   name: string;
   email: string;
@@ -21,12 +21,12 @@ interface RegisterResponse {
 export class RegisterUserUseCase {
   private userRepository: IUserRepository;
 
-  // Use Constructor Injection
   constructor(userRepository: IUserRepository) {
     this.userRepository = userRepository;
   }
 
-  async execute({ name, email, password }: RegisterRequest): Promise<RegisterResponse> {
+  // RESOLVED: Used 'DTO' types (from main) AND kept the validation (from fix/auth)
+  async execute({ name, email, password }: RegisterRequestDTO): Promise<RegisterResponseDTO> {
 
     // Validate email format
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
