@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { RegisterUserUseCase } from '../use-cases/auth/RegisterUser';
 import { LoginUserUseCase } from '../use-cases/auth/LoginUser';
 import { IUserRepository } from '../domain/repositories/IUserRepository';
+import { validateHeaderName } from 'node:http';
 export class AuthController {
   private registerUseCase: RegisterUserUseCase;
   private loginUseCase: LoginUserUseCase;
@@ -24,7 +25,7 @@ export class AuthController {
       res.status(201).json({ success: true, data: user });
     } catch (error) {
       if ((error as Error).message === 'User already exists') {
-        res.status(400).json({ success: false, message: 'User already exists' });
+        res.status(409).json({ success: false, message: 'User already exists' });
         return;
       }
       next(error);
@@ -43,10 +44,8 @@ export class AuthController {
       const result = await this.loginUseCase.execute({ email, password });
       res.status(200).json({ success: true, data: result });
     } catch (error) {
-      const errorMessage = (error as Error).message;
-      
-      if (errorMessage === 'Invalid credentials') {
-        res.status(401).json({ success: false, message: errorMessage });
+      if ((error as Error).message === 'Invalid credentials') {
+        res.status(401).json({ success: false, message: 'Please provide valid credentials' });
         return;
       }
       next(error);
