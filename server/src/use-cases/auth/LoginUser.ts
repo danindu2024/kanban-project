@@ -2,9 +2,17 @@ import bcrypt from 'bcryptjs';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { generateToken } from '../../utils/jwt';
 
-interface LoginRequest {
+interface LoginRequestDTO {
   email: string;
   password: string;
+}
+
+interface LoginResponseDTO{
+  id: string
+  name: string
+  email: string
+  role: string
+  token: string
 }
 
 export class LoginUserUseCase {
@@ -15,11 +23,10 @@ export class LoginUserUseCase {
     this.userRepository = userRepository;
   }
 
-  async execute({ email, password }: LoginRequest) {
+  async execute({ email, password }: LoginRequestDTO): Promise<LoginResponseDTO> {
     // Check if user exists
     const user = await this.userRepository.findByEmail(email);
     
-    // Note: It's good practice to return generic errors for security, which you already did.
     if (!user) {
       throw new Error('Invalid credentials'); 
     }
@@ -31,11 +38,10 @@ export class LoginUserUseCase {
     }
 
     // Generate Token
-    // FIX: Use 'user.id' (Domain Entity), not 'user._id' (Database Model)
     const token = generateToken(user.id);
     
     return {
-      id: user.id, // Return 'id' to be consistent with your API
+      id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
