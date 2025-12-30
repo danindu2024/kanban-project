@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { generateToken } from '../../utils/jwt';
+import { AppError } from '../../utils/AppError';
+import { ErrorCodes } from '../../constants/errorCodes';
 
 interface LoginRequestDTO {
   email: string;
@@ -28,13 +30,13 @@ export class LoginUserUseCase {
     const user = await this.userRepository.findByEmail(email);
     
     if (!user) {
-      throw new Error('Invalid credentials'); 
+      throw new AppError(ErrorCodes.INVALID_CREDENTIALS, 'Invalid credentials', 401); 
     }
 
     // Check if password matches
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      throw new Error('Invalid credentials');
+      throw new AppError(ErrorCodes.INVALID_CREDENTIALS, 'Invalid credentials', 401);
     }
 
     // Generate Token

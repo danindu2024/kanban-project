@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import boardRoutes from './routes/boardRoutes';
 import { errorHandler } from './middleware/errorHandler';
+import env from './utils/env';
 
 const app = express();
 
@@ -10,7 +11,13 @@ const app = express();
 app.use(express.json());
 
 // Cross-Origin Resource Sharing
-app.use(cors()); 
+app.use(cors({
+  origin: env.NODE_ENV === 'production' 
+    ? env.FRONTEND_URL
+    : 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE']
+})); 
 
 // Routes
 app.use('/api/auth', authRoutes);
