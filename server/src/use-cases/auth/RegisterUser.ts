@@ -2,13 +2,13 @@ import bcrypt from 'bcryptjs';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { generateToken } from '../../utils/jwt';
 
-interface RegisterRequest {
+interface RegisterRequestDTO {
   name: string;
   email: string;
   password: string;
 }
 
-interface RegisterResponse {
+interface RegisterResponseDTO {
   id: string;
   name: string;
   email: string;
@@ -24,7 +24,7 @@ export class RegisterUserUseCase {
     this.userRepository = userRepository;
   }
 
-  async execute({ name, email, password }: RegisterRequest): Promise<RegisterResponse> {
+  async execute({ name, email, password }: RegisterRequestDTO): Promise<RegisterResponseDTO> {
     const userExists = await this.userRepository.findByEmail(email);
     if (userExists) {
       throw new Error('User already exists');
