@@ -39,7 +39,7 @@ export class RegisterUserUseCase {
     }
 
     // length checks to prevent resource exhaustion attacks
-    if (password.length < 8 && password.length > 128) {
+    if (password.length < 8 || password.length > 128) {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Password must be at least 8 characters and must not exceed 128 characters', 400);
     }
 
