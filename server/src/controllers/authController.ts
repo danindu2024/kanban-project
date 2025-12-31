@@ -18,17 +18,6 @@ export class AuthController {
   registerUser = async (req: Request, res: Response, next: NextFunction) => {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      res.status(400).json({ 
-        success: false, 
-        error: {
-          code: 'VAL_001',
-          message: 'Please provide all fields'
-        }
-      });
-      return;
-    }
-
     try {
       const user = await this.registerUseCase.execute({ name, email, password });
       res.status(201).json({ success: true, data: user });
@@ -40,17 +29,6 @@ export class AuthController {
   loginUser = async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      res.status(400).json({ 
-        success: false, 
-        error: {
-          code: 'VAL_001',
-          message: 'Please provide email and password'
-        }
-      });
-      return;
-    }
-
     try {
       const result = await this.loginUseCase.execute({ email, password });
       res.status(200).json({ success: true, data: result });
@@ -61,20 +39,8 @@ export class AuthController {
 
   getCurrentUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const userId = req.user?.id;
 
-      if (!userId) {
-        res.status(401).json({ 
-          success: false, 
-          error: {
-            code: 'AUTH_003',
-            message: 'User not authenticated'
-          }
-        });
-        return;
-      }
-
-      const user = await this.getCurrentUserUseCase.execute(userId);
+      const user = await this.getCurrentUserUseCase.execute(req.user!.id);
       res.status(200).json({ success: true, data: user });
     } catch (error) {
         next(error);

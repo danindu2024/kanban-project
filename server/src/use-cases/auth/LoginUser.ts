@@ -26,6 +26,12 @@ export class LoginUserUseCase {
   }
 
   async execute({ email, password }: LoginRequestDTO): Promise<LoginResponseDTO> {
+
+    // Basic presence validation
+    if (!email || !password) {
+      throw new AppError(ErrorCodes.INVALID_CREDENTIALS, 'Missing email or password', 401);
+    }
+
     // Check if user exists
     const user = await this.userRepository.findByEmail(email);
     

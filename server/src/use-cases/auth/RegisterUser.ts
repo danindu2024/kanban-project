@@ -28,6 +28,11 @@ export class RegisterUserUseCase {
   // RESOLVED: Used 'DTO' types (from main) AND kept the validation (from fix/auth)
   async execute({ name, email, password }: RegisterRequestDTO): Promise<RegisterResponseDTO> {
 
+    // Basic presence validation
+    if (!name || !email || !password) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Missing required fields', 400);
+    }
+
     // Validate email format
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Invalid email format', 400);
