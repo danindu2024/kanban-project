@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Version** | 1.0 |
 | **Status** | Draft |
-| **Last Updated** | December 17, 2025 |
+| **Last Updated** | December 31, 2025 |
 | **Author** | Danindu Ransika |
 
 ---
@@ -73,6 +73,9 @@ To build "FlowState": a streamlined, professional-grade Kanban board tailored fo
 * Advanced monitoring tools (DataDog, ELK)
 * Kubernetes orchestration
 * Staging environment
+* Input sanitization (basic validation only)
+* MongoDB race condition handling for duplicate registrations
+* Token refresh mechanism
 
 ### 3.3 Explicit MVP Constraints
 * Single assignee per task only
