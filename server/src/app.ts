@@ -14,7 +14,9 @@ app.use(express.json());
 
 // HTTP Request Logging
 if (env.NODE_ENV !== 'test') {
-  app.use(morgan('combined')); // Use 'dev' for colored output in development
+  app.use(morgan('combined', {
+    skip: (req) => req.path.includes('/auth/') // Skip logging auth routes
+  }));
 }
 
 // Cross-Origin Resource Sharing
