@@ -10,6 +10,7 @@ export const ErrorCodes = {
 
   // User errors
   USER_NOT_FOUND: 'USER_001',
+  USER_ALREADY_EXISTS: 'USER_002',
   
   // Task errors
   TASK_NOT_FOUND: 'TASK_001',
