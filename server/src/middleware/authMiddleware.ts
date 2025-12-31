@@ -29,6 +29,17 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     next();
 
   } catch (error) {
-    return next(new AppError(ErrorCodes.TOKEN_INVALID, 'Not authorized, token failed', 401));
+    if ((error as Error).name === 'TokenExpiredError') {
+      return next(new AppError(
+        ErrorCodes.TOKEN_EXPIRED, 
+        'Token has expired, please login again', 
+        401
+      ));
+    }
+    return next(new AppError(
+      ErrorCodes.TOKEN_INVALID, 
+      'Invalid token', 
+      401
+    ));
   }
 };
