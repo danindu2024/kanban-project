@@ -24,7 +24,7 @@
 List for both environments:
 
 * `MONGODB_URI`
-* `JWT_SECRET`
+* `JWT_SECRET` - Minimum 32 characters required (enforced at startup)
 * `NODE_ENV`
 * `FRONTEND_URL (for CORS)`
 * `PORT`

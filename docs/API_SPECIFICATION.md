@@ -67,7 +67,44 @@ POST `/auth/login`
 ### 2.3 Get Current User
 GET `/auth/me [Auth]`
 
+GET `/auth/me [Auth]`
+
 * **Description:** Validates token and returns current user data.
+
+* **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "123",
+    "name": "John Doe",
+    "email": "user@example.com",
+    "role": "user"
+  }
+}
+```
+
+* **Error (401 Unauthorized - Token Expired):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "AUTH_002",
+    "message": "Token has expired, please login again"
+  }
+}
+```
+
+* **Error (401 Unauthorized - Invalid Token):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "AUTH_003",
+    "message": "Invalid token"
+  }
+}
+```
 
 ## 3 Boards
 ### 3.1 Get All Boards
@@ -218,6 +255,8 @@ DELETE `/tasks/:id [Auth]`
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
+|USER_001|User Not Found|Requested user doesn't exist|Invalid user ID in JWT payload|
+|USER_002|User Already Exists|Email already registered|Duplicate registration attempt|
 
 ## 9. State Management Contract
 Zustand store structure:

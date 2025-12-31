@@ -68,3 +68,37 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 * **tasks.column_id** - Standard index
 * **tasks.board_id** - Standard index
 * No **compound indexes** in Sprint 1
+
+## 3. Validation & Security Rules
+
+### 3.1 Email Validation
+**Regex Pattern:**
+```regex
+^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+```
+
+**Requirements:**
+- Alphanumeric username with allowed special chars (`._%+-`)
+- Valid domain structure
+- Minimum 2-character TLD
+
+### 3.2 Password Policy
+- **Minimum Length:** 8 characters
+- **Maximum Length:** 128 characters (prevents DoS via bcrypt)
+- **Complexity:** None (Sprint 1)
+- **Hashing:** Bcrypt with 10 salt rounds
+
+### 3.3 Field Length Limits
+| Field | Max Length | Reason |
+|-------|------------|--------|
+| Name | 100 chars | Prevent database bloat |
+| Email | 255 chars | RFC 5321 standard |
+| Password | 128 chars | Bcrypt performance limit |
+
+### 3.4 JWT Configuration
+- **Algorithm:** HS256
+- **Expiration:** 7 days
+- **Secret Length:** Minimum 32 characters (enforced at startup)
+- **Token Differentiation:**
+  - `TokenExpiredError` → AUTH_002
+  - `JsonWebTokenError` → AUTH_003
