@@ -25,17 +25,21 @@ export class RegisterUserUseCase {
     this.userRepository = userRepository;
   }
 
-  // RESOLVED: Used 'DTO' types (from main) AND kept the validation (from fix/auth)
   async execute({ name, email, password }: RegisterRequestDTO): Promise<RegisterResponseDTO> {
+
+    // Basic presence validation
+    if (!name || !email || !password) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Missing required fields', 400);
+    }
 
     // Validate email format
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Invalid email format', 400);
     }
-
+    // Check if user already exists
     const userExists = await this.userRepository.findByEmail(email);
     if (userExists) {
-      throw new AppError(ErrorCodes.VALIDATION_ERROR, 'User already exists', 400);
+      throw new AppError(ErrorCodes.USER_ALREADY_EXISTS, 'User already exists', 400);
     }
 
     // length checks to prevent resource exhaustion attacks

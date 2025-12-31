@@ -4,11 +4,18 @@ import authRoutes from './routes/authRoutes';
 import boardRoutes from './routes/boardRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import env from './utils/env';
+import { apiLimiter } from './middleware/rateLimiter';
+import morgan from 'morgan';
 
 const app = express();
 
-// Middleware
+// parse JSON request bodies
 app.use(express.json());
+
+// HTTP Request Logging
+if (env.NODE_ENV !== 'test') {
+  app.use(morgan('combined')); // Use 'dev' for colored output in development
+}
 
 // Cross-Origin Resource Sharing
 app.use(cors({
@@ -18,6 +25,9 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE']
 })); 
+
+// Rate Limiting
+app.use('/api', apiLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);

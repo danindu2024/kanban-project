@@ -2,6 +2,7 @@ import express from 'express';
 import { AuthController } from '../controllers/authController';
 import { UserRepository } from '../infrastructure/repositories/UserRepository';
 import { protect } from '../middleware/authMiddleware';
+import { authLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
 
@@ -9,8 +10,8 @@ const router = express.Router();
 const userRepository = new UserRepository();
 const authController = new AuthController(userRepository);
 
-router.post('/register', authController.registerUser);
-router.post('/login', authController.loginUser);
+router.post('/register', authLimiter, authController.registerUser);
+router.post('/login', authLimiter, authController.loginUser);
 router.get('/me', protect, authController.getCurrentUser);
 
 export default router;
