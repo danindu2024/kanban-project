@@ -32,6 +32,12 @@ export class LoginUserUseCase {
       throw new AppError(ErrorCodes.INVALID_CREDENTIALS, 'Missing email or password', 401);
     }
 
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      throw new AppError(ErrorCodes.INVALID_CREDENTIALS, 'Invalid email or password', 401);
+    }
+
     // Check if user exists
     const user = await this.userRepository.findByEmail(email);
     

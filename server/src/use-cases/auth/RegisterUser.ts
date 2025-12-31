@@ -33,9 +33,11 @@ export class RegisterUserUseCase {
     }
 
     // Validate email format
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Invalid email format', 400);
     }
+
     // Check if user already exists
     const userExists = await this.userRepository.findByEmail(email);
     if (userExists) {
