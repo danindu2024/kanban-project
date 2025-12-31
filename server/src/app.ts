@@ -4,6 +4,7 @@ import authRoutes from './routes/authRoutes';
 import boardRoutes from './routes/boardRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import env from './utils/env';
+import { apiLimiter } from './middleware/rateLimiter';
 
 const app = express();
 
@@ -18,6 +19,9 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE']
 })); 
+
+// Rate Limiting
+app.use('/api', apiLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
