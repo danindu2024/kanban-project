@@ -15,4 +15,9 @@ const env = cleanEnv(process.env, {
   PORT: port({ default: 5000 }),
 });
 
+// Manual validation for JWT_SECRET length
+  if (env.JWT_SECRET.length < 32) {
+    throw new Error('JWT_SECRET must be at least 32 characters long');
+  }
+
 export default env;
