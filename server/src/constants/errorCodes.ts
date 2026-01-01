@@ -24,4 +24,7 @@ export const ErrorCodes = {
 
   // URL not found
   URL_NOT_FOUND: 'URL_001',
+
+  // Internal server error
+  INTERNAL_ERROR: 'SERVER_001',
 } as const;

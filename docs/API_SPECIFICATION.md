@@ -219,6 +219,7 @@ DELETE `/tasks/:id [Auth]`
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
 |URL_001|URL Not Found|URL Not Fount|Undefined URL|
+|SERVER_001|INTERNAL ERROR|Internal Server doesn't work|server crashes|
 
 ## 9. State Management Contract
 Zustand store structure:
