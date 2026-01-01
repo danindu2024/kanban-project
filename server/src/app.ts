@@ -6,6 +6,8 @@ import { errorHandler } from './middleware/errorHandler';
 import env from './utils/env';
 import { apiLimiter } from './middleware/rateLimiter';
 import morgan from 'morgan';
+import { AppError } from './utils/AppError';
+import { ErrorCodes } from './constants/errorCodes';
 
 const app = express();
 
@@ -15,7 +17,7 @@ app.use(express.json());
 // HTTP Request Logging
 if (env.NODE_ENV !== 'test') {
   app.use(morgan('combined', {
-    skip: (req) => req.path.includes('/auth/') // Skip logging auth routes
+    skip: (req: Request) => req.path.includes('/auth/') // Skip logging auth routes
   }));
 }
 
@@ -42,9 +44,11 @@ app.get('/', (req, res) => {
 
 // 404 Handler (Missing Route)
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  res.status(404);
-  next(error);
+  next(new AppError(
+      ErrorCodes.URL_NOT_FOUND, 
+      'URL not found', 
+      404 // Standard code for "Not Found"
+    ));
 });
 
 // Global Error Handler

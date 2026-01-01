@@ -21,4 +21,7 @@ export const ErrorCodes = {
   
   // Rate limiting
   RATE_LIMIT_EXCEEDED: 'RATE_001',
+
+  // URL not found
+  URL_NOT_FOUND: 'URL_001',
 } as const;

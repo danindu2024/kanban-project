@@ -218,6 +218,7 @@ DELETE `/tasks/:id [Auth]`
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
+|URL_001|URL Not Found|URL Not Fount|Undefined URL|
 
 ## 9. State Management Contract
 Zustand store structure:
