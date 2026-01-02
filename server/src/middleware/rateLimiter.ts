@@ -9,7 +9,7 @@ export const apiLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 
-  handler: (req, res, next) => {
+  handler: (req: Request, res: Response, next: NextFunction) => {
     next(new AppError(
       ErrorCodes.RATE_LIMIT_EXCEEDED, 
       'Too many requests from this IP, please try again later', 
