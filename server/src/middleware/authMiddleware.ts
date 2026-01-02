@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import env from '../utils/env';
 import { AppError } from '../utils/AppError';
 import { ErrorCodes } from '../constants/errorCodes';
+import { verifyToken } from '../utils/jwt';
+import {JwtPayload} from "jsonwebtoken";
 
-interface JwtPayload {
+interface AuthPayload extends JwtPayload {
   id: string;
 }
 
@@ -12,7 +12,7 @@ export interface AuthRequest extends Request {
   user?: { id: string };
 }
 
-export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const protect = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     let token;
 
@@ -24,7 +24,8 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
       return next(new AppError(ErrorCodes.TOKEN_INVALID, 'Not authorized, no token', 401));
     }
 
-    const decoded = jwt.verify(token, env.JWT_SECRET as string) as JwtPayload;
+    const decoded = verifyToken(token) as AuthPayload;
+
     req.user = { id: decoded.id };
     next();
 
@@ -36,7 +37,8 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
         401
       ));
     }
-    return next(new AppError(
+
+    next(new AppError(
       ErrorCodes.TOKEN_INVALID, 
       'Invalid token', 
       401
