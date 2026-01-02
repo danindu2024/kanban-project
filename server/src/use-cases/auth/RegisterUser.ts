@@ -41,12 +41,12 @@ export class RegisterUserUseCase {
     // Check if user already exists
     const userExists = await this.userRepository.findByEmail(email);
     if (userExists) {
-      throw new AppError(ErrorCodes.USER_ALREADY_EXISTS, 'User already exists', 400);
+      throw new AppError(ErrorCodes.USER_ALREADY_EXISTS, 'User already exists', 409);
     }
 
     // length checks to prevent resource exhaustion attacks
-    if (password.length < 8 || password.length > 128) {
-      throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Password must be at least 8 characters and must not exceed 128 characters', 400);
+    if (password.length < 8 || password.length > 50) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Password must be at least 8 characters and must not exceed 50 characters', 400);
     }
 
     if (name.length > 100) {

@@ -255,6 +255,8 @@ DELETE `/tasks/:id [Auth]`
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
+|URL_001|URL Not Found|URL Not Fount|Undefined URL|
+|SERVER_001|INTERNAL ERROR|Internal Server doesn't work|server crashes|
 |USER_001|User Not Found|Requested user doesn't exist|Invalid user ID in JWT payload|
 |USER_002|User Already Exists|Email already registered|Duplicate registration attempt|
 
