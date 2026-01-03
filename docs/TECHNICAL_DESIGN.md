@@ -93,7 +93,8 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 |-------|------------|--------|
 | Name | 100 chars | Prevent database bloat |
 | Email | 255 chars | RFC 5321 standard |
-| Password | 128 chars | Bcrypt performance limit |
+| Password | 50 chars | Bcrypt performance limit with buffer |
+| Board Title | 100 chars | Prevent UI overflow and database bloat |
 
 ### 3.4 JWT Configuration
 - **Algorithm:** HS256
@@ -102,3 +103,17 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - **Token Differentiation:**
   - `TokenExpiredError` → AUTH_002
   - `JsonWebTokenError` → AUTH_003
+
+###  3.5 Board Validation Rules
+
+* **Title:** Required, maximum 100 characters
+* **Owner ID:** Derived from JWT, not validated (trusted server data)
+* **Members Array:** Initialized as empty array on creation
+* **ObjectId Validation:** Handled at infrastructure layer via CastError
+
+### 3.6 Authorization Model for Boards
+
+* **Board Access:** Users can only retrieve boards where they are owner OR member
+* **Board Creation:** Any authenticated user can create boards (they become owner)
+* **Board Deletion:** Only board owner or admin can delete (Sprint 2)
+* **Implementation:** Authorization enforced via MongoDB query filters in repository layer

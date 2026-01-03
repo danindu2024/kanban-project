@@ -35,6 +35,26 @@
 | **Edit Task Content**| ✅ | ✅ | ✅ | ❌ |
 | **Delete Task** | ✅ | ✅ | ❌ | ❌ |
 
+### 2.1 Board Authorization Model
+
+#### Access Control Strategy:
+
+* Authorization enforced through data filtering at repository layer
+* User ID extracted from verified JWT token (cannot be manipulated)
+* Repository queries automatically filter: `{ $or: [{ owner_id: userId }, { members: userId }] }`
+
+#### Security Guarantees:
+
+* Users can only see/access boards they own or are members of
+* JWT middleware ensures `req.user.id` is authentic
+* No additional permission checks needed at use case layer
+
+#### Trade-offs:
+
+* Authorization is implicit in data model (not explicit permission checks)
+* Suitable for simple ownership/membership model
+* More complex permissions would require explicit authorization layer
+
 ## 3: Conflict Resolution Strategy
 * **Strategy:** "Last Write Wins"
 * No version control or operational transformation
@@ -117,3 +137,16 @@
 **Rationale:** Simplicity for academic users; complexity adds friction
 
 **Sprint 2 Plan:** Optional strength indicator (not enforced)
+
+### 8.4 MongoDB CastError Handling
+* **Status:** Implemented in Sprint 1
+* **Behavior:**
+
+* Invalid ObjectId formats (from user input) trigger MongoDB CastError
+* Global error handler converts CastError to 400 Bad Request
+* Server-generated IDs (e.g., JWT userId) that fail are treated as 500 Internal Error
+
+* **Examples:**
+
+* `GET /boards/invalid-id` → 400 Bad Request
+* Corrupted JWT with malformed userId → 500 Internal Server Error (indicates server bug)

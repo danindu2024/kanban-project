@@ -2,7 +2,7 @@
 
 All notable changes to the FlowState project documentation and implementation.
 
-## [Sprint 1] - 2025-12-31
+## [Sprint 1] - 2025-01-03
 
 ### Security Enhancements
 - **Email Validation:** Upgraded regex to RFC-compliant pattern
@@ -26,3 +26,23 @@ All notable changes to the FlowState project documentation and implementation.
 - Chose JWT-in-JSON-body over HTTP-Only cookies for Sprint 1 simplicity
 - Accepted "last write wins" for concurrent operations (no conflict resolution)
 - Deferred refresh token implementation to Sprint 2
+
+### Board Management Implementation
+- **Board Creation:** Implemented POST /boards endpoint with title validation
+- **Board Retrieval:** Implemented GET /boards endpoint (returns boards where user is owner/member)
+- **Authorization:** Boards automatically filtered by ownership/membership via repository query
+- **Response Fields:** All board responses include `created_at`, `members`, and `owner_id`
+
+### Repository Layer
+- **ObjectId Validation:** Removed premature validation checks; CastError handled by global error handler
+- **Security:** Repository queries ensure users only access boards they own or are members of
+
+### Error Handling
+- **New Error Code:** AUTH_004 for unauthenticated user scenarios
+- **CastError Handling:** MongoDB CastErrors converted to 400 Bad Request responses
+
+### Deferred to Sprint 2
+- GET /boards/:id (board details with columns and tasks)
+- DELETE /boards/:id (board deletion)
+- Pagination for board lists
+- Member detail population
