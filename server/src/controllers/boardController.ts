@@ -19,34 +19,21 @@ export class BoardController {
     try {
       const { title } = req.body;
 
-      if (!title) {
-        res.status(400).json({
-          success: false,
-          error: {
-            code: 'VAL_001',
-            message: 'Please provide a title'
-          }
-        });
-        return;
-      }
-
       // req.user is set by authMiddleware
       const userId = req.user?.id;
 
+      // Ensure userId exists for type safety
       if (!userId) {
-        res.status(401).json({
-          success: false,
-          error: {
-            code: 'AUTH_003',
-            message: 'User not authenticated'
-          }
-        });
-        return;
+        throw new AppError(
+          ErrorCodes.USER_NOT_AUTHENTICATED,
+          'User not authenticated',
+          401
+        );
       }
 
       const board = await this.createBoardUseCase.execute({ 
         title, 
-        ownerId: userId 
+        owner_id: userId 
       });
 
       res.status(201).json({
@@ -60,17 +47,16 @@ export class BoardController {
 
   getBoards = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
+      // req.user is set by authMiddleware
       const userId = req.user?.id;
 
+      // Ensure userId exists for type safety
       if (!userId) {
-        res.status(401).json({
-          success: false,
-          error: {
-            code: 'AUTH_003',
-            message: 'User not authenticated'
-          }
-        });
-        return;
+        throw new AppError(
+          ErrorCodes.USER_NOT_AUTHENTICATED,
+          'User not authenticated',
+          401
+        );
       }
 
       const boards = await this.getUserBoardsUseCase.execute(userId);
