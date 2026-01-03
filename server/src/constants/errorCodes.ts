@@ -3,6 +3,7 @@ export const ErrorCodes = {
   INVALID_CREDENTIALS: 'AUTH_001',
   TOKEN_EXPIRED: 'AUTH_002',
   TOKEN_INVALID: 'AUTH_003',
+  USER_NOT_AUTHENTICATED: 'AUTH_004',
   
   // Board errors
   BOARD_NOT_FOUND: 'BOARD_001',
@@ -18,6 +19,7 @@ export const ErrorCodes = {
   
   // Validation errors
   VALIDATION_ERROR: 'VAL_001',
+  MISSING_INPUT: 'VAL_002',
   
   // Rate limiting
   RATE_LIMIT_EXCEEDED: 'RATE_001',
