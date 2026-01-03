@@ -1,6 +1,10 @@
 import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
 import { Board } from "../../domain/entities/Board";
 
+interface GetUserBoardsResponseDTO {
+  boards: Board[];
+}
+
 export class GetUserBoards {
   private boardRepository: IBoardRepository
 
@@ -8,8 +12,9 @@ export class GetUserBoards {
     this.boardRepository = boardRepository;
   }
 
-  async execute(userId: string): Promise<Board[]> {
+  async execute(userId: string): Promise<GetUserBoardsResponseDTO> {
     // SECURITY: userId comes from verified JWT token (authMiddleware)
-    return await this.boardRepository.findAllByUserId(userId);
+    const boards = await this.boardRepository.findAllByUserId(userId);
+    return { boards };
   }
 }
