@@ -7,11 +7,11 @@ export interface IBoardDocument extends Document {
   created_at: Date;
 }
 
-const BoardSchema = new Schema<IBoardDocument>({
+const BoardSchema: Schema = new Schema({
   title: { type: String, required: true },
   owner_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   created_at: { type: Date, default: Date.now },
 });
 
-export const BoardModel = mongoose.model<IBoardDocument>("Board", BoardSchema);
+export default mongoose.model<IBoardDocument>("Board", BoardSchema);
