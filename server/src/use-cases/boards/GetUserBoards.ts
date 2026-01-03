@@ -9,6 +9,7 @@ export class GetUserBoards {
   }
 
   async execute(userId: string): Promise<Board[]> {
+    // SECURITY: userId comes from verified JWT token (authMiddleware)
     return await this.boardRepository.findAllByUserId(userId);
   }
 }
