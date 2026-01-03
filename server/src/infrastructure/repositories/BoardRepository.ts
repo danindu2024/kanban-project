@@ -16,11 +16,9 @@ export class BoardRepository implements IBoardRepository {
   async findAllByUserId(user_id: string): Promise<BoardEntity[]> {
     // Find boards where user is owner OR a member
 
-    // SECURITY CHECK: If user_id is invalid, return empty instead of crashing
-    if (!mongoose.Types.ObjectId.isValid(user_id)) {
-      return []; 
-    }
-    
+    // Invalid objectId(user_id) should crash and be caught by global error handler
+    // this shouldn't silently fail
+
     const docs = await BoardModel.find({
       $or: [{ owner_id: user_id }, { members: user_id }],
     });
@@ -28,10 +26,9 @@ export class BoardRepository implements IBoardRepository {
   }
 
   async findById(id: string): Promise<BoardEntity | null> {
-    // SECURITY CHECK: Prevent CastError crash
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return null;
-    }
+    
+    // Invalid objectId(user_id) should crash and be caught by global error handler
+    // this shouldn't silently fail
     
     const doc = await BoardModel.findById(id);
     if (!doc) return null;

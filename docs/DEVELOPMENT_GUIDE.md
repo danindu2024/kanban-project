@@ -73,6 +73,6 @@ Purpose and what it creates:
 
 * 1 Admin user
 * 1 Regular user
-* 1 Sample board
+* 1 Sample board (owned by regular user)
 * 3 Columns (To Do, In Progress, Done)
 * 5 Sample tasks

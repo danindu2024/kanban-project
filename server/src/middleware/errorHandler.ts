@@ -20,6 +20,17 @@ export const errorHandler = (
     });
     return;
   }
+  // Handle Mongoose CastError (invalid ObjectId)
+  if (err.name === 'CastError') {
+    res.status(400).json({
+    success: false,
+    error: {
+      code: ErrorCodes.VALIDATION_ERROR,
+      message: 'Invalid ID format',
+    },
+  });
+  return;
+  }
 
   // Generic error fallback
   console.error('Unhandled Error:', err);

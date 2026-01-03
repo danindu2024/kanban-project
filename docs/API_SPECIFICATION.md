@@ -119,9 +119,30 @@ GET `/boards [Auth]`
 {
   "success": true,
   "data": [
-    { "id": "b1", "title": "Project Alpha", "owner_id": "u1" },
-    { "id": "b2", "title": "Marketing", "owner_id": "u2" }
+    {"id": "b1", 
+    "title": "Project Alpha", 
+    "owner_id": "u1",
+    "members": [],
+    "created_at": "2025-01-15T10:30:00.000Z"},
+    {"id": "b2", 
+    "title": "Marketing", 
+    "owner_id": "u2",
+    "members": ["u3", "u4"],
+    "created_at": "2025-01-14T08:20:00.000Z"}
   ]
+},
+
+```
+
+* **Error (401 Unauthorized):**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "AUTH_004",
+    "message": "User not authenticated"
+  }
 }
 ```
 
@@ -130,7 +151,52 @@ POST `/boards [Auth]`
 
 * **Body:** `{ "title": "New Board" }`
 
-* **Response (201 Created):** Returns the created board object.
+* **Response (201 Created):** 
+```json
+{
+  "success": true,
+  "data": {
+    "id": "b1",
+    "title": "New Board",
+    "owner_id": "u1",
+    "members": [],
+    "created_at": "2025-01-15T10:30:00.000Z"
+  }
+}
+```
+* **Error (400 Bad Request - Missing Title):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Title is required to create a board."
+  }
+}
+```
+
+* **Error (400 Bad Request - Title Too Long):**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Board title must be less than 100 characters."
+  }
+}
+```
+
+* **Error (401 Unauthorized):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "AUTH_004",
+    "message": "User not authenticated"
+  }
+}
+```
 
 ### 3.3 Get Board Details (with Columns & Tasks)
 GET `/boards/:id [Auth]`
@@ -161,7 +227,7 @@ GET `/boards/:id [Auth]`
 DELETE `/boards/:id [Auth]`
 
 * **Permission:** Only the Board Owner or Admin can delete.
-hi
+
 ## 4. Columns
 ### 4.1 Create Column
 POST `/columns [Auth]`
@@ -249,11 +315,13 @@ DELETE `/tasks/:id [Auth]`
 |AUTH_001|Invalid Credentials|Email or password incorrect|Login with wrong password|
 |AUTH_002|Token Expired|JWT has expired|Session timeout|
 |AUTH_003|Token Invalid|JWT signature invalid|Tampered token|
+|AUTH_004|User Not Authenticated|User identity not verified|Missing user in JWT payload|
 |BOARD_001|Board Not Found|Requested board doesn't exist|Invalid board ID|
 |BOARD_002|Access Denied|User not authorized|Non-member accessing board|
 |TASK_001|Task Not Found|Requested task doesn't exist|Invalid task ID|
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
+|VAL_002|MISSING_INPUT|Required fields are not provided|User hasn't provided required fields|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
 |URL_001|URL Not Found|URL Not Fount|Undefined URL|
 |SERVER_001|INTERNAL ERROR|Internal Server doesn't work|server crashes|
