@@ -3,8 +3,6 @@ import { AuthRequest } from "../middleware/authMiddleware";
 import { CreateBoard } from "../use-cases/boards/CreateBoard";
 import { GetUserBoards } from "../use-cases/boards/GetUserBoards";
 import { IBoardRepository } from "../domain/repositories/IBoardRepository";
-import { AppError } from '../utils/AppError';
-import { ErrorCodes } from '../constants/errorCodes';
 
 export class BoardController {
   private createBoardUseCase: CreateBoard;
@@ -20,16 +18,7 @@ export class BoardController {
       const { title } = req.body;
 
       // req.user is set by authMiddleware
-      const userId = req.user?.id;
-
-      // Ensure userId exists for type safety
-      if (!userId) {
-        throw new AppError(
-          ErrorCodes.USER_NOT_AUTHENTICATED,
-          'User not authenticated',
-          401
-        );
-      }
+      const userId = req.user!.id;
 
       const board = await this.createBoardUseCase.execute({ 
         title, 
@@ -48,16 +37,7 @@ export class BoardController {
   getBoards = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // req.user is set by authMiddleware
-      const userId = req.user?.id;
-
-      // Ensure userId exists for type safety
-      if (!userId) {
-        throw new AppError(
-          ErrorCodes.USER_NOT_AUTHENTICATED,
-          'User not authenticated',
-          401
-        );
-      }
+      const userId = req.user!.id;
 
       const boards = await this.getUserBoardsUseCase.execute(userId);
 
