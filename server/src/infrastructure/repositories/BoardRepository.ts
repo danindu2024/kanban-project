@@ -1,7 +1,6 @@
 import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
 import { Board as BoardEntity } from "../../domain/entities/Board";
 import BoardModel, {IBoardDocument } from "../models/BoardSchema";
-import mongoose from "mongoose";
 
 export class BoardRepository implements IBoardRepository {
   async create(boardData: { 
