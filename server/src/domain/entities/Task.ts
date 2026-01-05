@@ -2,12 +2,12 @@ export type Priority = 'low' | 'medium' | 'high';
 
 export interface Task {
   id: string;
-  columnId: string;
-  boardId: string;
+  column_id: string;
+  board_id: string;
   title: string;
   description?: string;
   priority: Priority;
-  assigneeId?: string; // Single assignee as per MVP
+  assignee_id?: string; // Single assignee as per MVP
   order: number;
-  createdAt: Date;
+  created_at: Date;
 }

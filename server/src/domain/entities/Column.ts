@@ -1,7 +1,10 @@
+import { Task } from "./Task";
+
 export interface Column {
   id: string;
-  boardId: string;
+  board_id: string;
   title: string;
   order: number;
-  createdAt: Date;
+  tasks?: Task[];
+  created_at: Date;
 }
