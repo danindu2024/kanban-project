@@ -54,6 +54,11 @@ export class TaskRepository implements ITaskRepository {
     return result.deletedCount > 0;
   }
 
+  async findById(taskId: string): Promise<TaskEntity | null> {
+    const taskDoc =  await TaskModel.findById(taskId);
+    return taskDoc ? this.mapToEntity(taskDoc) : null;
+  }
+
   async moveTask(taskId: string, targetColumnId: string, newOrder: number): Promise<void> {
     const session = await mongoose.startSession();
     session.startTransaction();
