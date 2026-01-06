@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import boardRoutes from './routes/boardRoutes';
+import columnRoutes from './routes/columnRoutes';
+import taskRoutes from './routes/taskRoutes'
 import { errorHandler } from './middleware/errorHandler';
 import env from './utils/env';
 import { apiLimiter } from './middleware/rateLimiter';
@@ -36,6 +38,8 @@ app.use('/api', apiLimiter);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/boards', boardRoutes);
+app.use("api/columns", columnRoutes);
+app.use("api/tasks", taskRoutes)
 
 // Health Check
 app.get('/', (req, res) => {

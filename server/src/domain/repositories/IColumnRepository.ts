@@ -1,8 +1,12 @@
 import { Column } from '../entities/Column';
 
 export interface IColumnRepository {
-  create(column: Partial<Column>): Promise<Column>;
+  create(columnData: 
+    { board_id: string; 
+      title: string; 
+      order: number;}): Promise<Column>;
+
   findByBoardId(boardId: string): Promise<Column[]>;
-  updateOrder(columnId: string, newOrder: number): Promise<void>;
+  update(columnId: string, updateData: Partial<Column>): Promise<Column | null>;
   findById(id: string): Promise<Column | null>;
 }
