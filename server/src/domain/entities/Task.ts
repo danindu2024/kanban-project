@@ -7,7 +7,7 @@ export interface Task {
   title: string;
   description?: string;
   priority: Priority;
-  assignee_id?: string; // Single assignee as per MVP
+  assignee_id?: string | null; // Single assignee as per MVP
   order: number;
   created_at: Date;
 }
