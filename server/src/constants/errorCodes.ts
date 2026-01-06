@@ -4,6 +4,7 @@ export const ErrorCodes = {
   TOKEN_EXPIRED: 'AUTH_002',
   TOKEN_INVALID: 'AUTH_003',
   USER_NOT_AUTHENTICATED: 'AUTH_004',
+  NOT_AUTHORIZED: 'AUTH_005',
   
   // Board errors
   BOARD_NOT_FOUND: 'BOARD_001',
@@ -29,4 +30,7 @@ export const ErrorCodes = {
 
   // Internal server error
   INTERNAL_ERROR: 'SERVER_001',
+
+  // Column errors
+  COLUMN_NOT_FOUND: 'COLUMN_001',
 } as const;
