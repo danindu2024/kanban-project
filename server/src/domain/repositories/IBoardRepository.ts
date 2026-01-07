@@ -8,4 +8,5 @@ export interface IBoardRepository {
 
   findAllByUserId(user_id: string): Promise<Board[]>;
   findById(id: string): Promise<Board | null>;
+  delete(id: string): Promise<Boolean>
 }
