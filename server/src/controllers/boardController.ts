@@ -2,15 +2,19 @@ import { Response, NextFunction } from "express";
 import { AuthRequest } from "../middleware/authMiddleware";
 import { CreateBoard } from "../use-cases/boards/CreateBoard";
 import { GetUserBoards } from "../use-cases/boards/GetUserBoards";
+import { DeleteBoard } from "../use-cases/boards/DeleteBoard";
 import { IBoardRepository } from "../domain/repositories/IBoardRepository";
+import { IUserRepository } from "../domain/repositories/IUserRepository";
 
 export class BoardController {
   private createBoardUseCase: CreateBoard;
   private getUserBoardsUseCase: GetUserBoards;
+  private deleteBoardUseCase: DeleteBoard;
 
-  constructor(boardRepository: IBoardRepository) {
-    this.createBoardUseCase = new CreateBoard(boardRepository);
-    this.getUserBoardsUseCase = new GetUserBoards(boardRepository);
+  constructor(boardRepository: IBoardRepository, userRepository: IUserRepository) {
+    this.createBoardUseCase = new CreateBoard(boardRepository, userRepository);
+    this.getUserBoardsUseCase = new GetUserBoards(boardRepository, userRepository);
+    this.deleteBoardUseCase = new DeleteBoard(boardRepository, userRepository)
   }
 
   createBoard = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -49,4 +53,19 @@ export class BoardController {
       next(error);
     }
   };
+
+  deleteBoard = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try{
+      const boardId = req.params.id
+      const userId = req.user!.id
+
+      await this.deleteBoardUseCase.execute(boardId, userId)
+      res.status(200).json({
+        success: true,
+        message: 'Board Deleted successfully'
+      })
+    }catch(error){
+      next(error)
+    }
+  }
 }
