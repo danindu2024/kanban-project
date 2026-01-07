@@ -14,10 +14,6 @@ export class BoardRepository implements IBoardRepository {
 
   async findAllByUserId(user_id: string): Promise<BoardEntity[]> {
     // Find boards where user is owner OR a member
-
-    // Invalid objectId(user_id) should crash and be caught by global error handler
-    // this shouldn't silently fail
-
     const docs = await BoardModel.find({
       $or: [{ owner_id: user_id }, { members: user_id }],
     });
@@ -26,12 +22,14 @@ export class BoardRepository implements IBoardRepository {
 
   async findById(id: string): Promise<BoardEntity | null> {
     
-    // Invalid objectId(user_id) should crash and be caught by global error handler
-    // this shouldn't silently fail
-    
-    const doc = await BoardModel.findById(id);
+    const doc = await BoardModel.findById({_id: id});
     if (!doc) return null;
     return this.mapToEntity(doc);
+  }
+
+  async delete(id: string): Promise<Boolean>{
+    const result = await BoardModel.deleteOne({_id: id})
+    return result.deletedCount > 0;
   }
 
   private mapToEntity(doc: IBoardDocument): BoardEntity {
