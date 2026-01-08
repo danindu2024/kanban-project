@@ -18,5 +18,6 @@ router.use(protect);
 router.post("/", boardController.createBoard);
 router.get("/", boardController.getBoards);
 router.delete("/:id", boardController.deleteBoard)
+router.post("/:id/members", boardController.addMembers)
 
 export default router;
