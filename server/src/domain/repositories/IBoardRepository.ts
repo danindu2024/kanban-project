@@ -11,4 +11,5 @@ export interface IBoardRepository {
   delete(id: string): Promise<Boolean>;
   addMembers(boardId: string, members: string[]): Promise<Board | null>;
   removeMember(boardId: string, memberId: string): Promise<Board | null>;
+  updateBoard(boardId: string, title: string): Promise<Board | null>;
 }
