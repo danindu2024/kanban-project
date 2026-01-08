@@ -21,7 +21,7 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
     }
 
     if (!token) {
-      return next(new AppError(ErrorCodes.TOKEN_INVALID, 'Not authorized, no token', 401));
+      return next(new AppError(ErrorCodes.USER_NOT_AUTHENTICATED, 'Not authorized, no token', 401));
     }
 
     const decoded = verifyToken(token) as AuthPayload;
