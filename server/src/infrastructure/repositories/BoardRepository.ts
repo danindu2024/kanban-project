@@ -32,6 +32,20 @@ export class BoardRepository implements IBoardRepository {
     return result.deletedCount > 0;
   }
 
+  async addMembers(boardId: string, members: string[]): Promise<BoardEntity | null>{
+    const doc = await BoardModel.findByIdAndUpdate(
+      boardId, 
+      { 
+      // $addToSet ensures no duplicates
+      // $each allows pushing an array of values at once
+      $addToSet: { members: { $each: members } } 
+      },
+      { new: true, runValidators: true })
+
+    if(!doc) return null
+    return this.mapToEntity(doc)
+  }
+
   private mapToEntity(doc: IBoardDocument): BoardEntity {
     return {
       id: doc._id.toString(),
