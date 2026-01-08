@@ -3,6 +3,7 @@ import { AuthRequest } from "../middleware/authMiddleware";
 import { CreateBoard } from "../use-cases/boards/CreateBoard";
 import { GetUserBoards } from "../use-cases/boards/GetUserBoards";
 import { DeleteBoard } from "../use-cases/boards/DeleteBoard";
+import { AddMembers } from "../use-cases/boards/AddMembers";
 import { IBoardRepository } from "../domain/repositories/IBoardRepository";
 import { IUserRepository } from "../domain/repositories/IUserRepository";
 
@@ -10,11 +11,13 @@ export class BoardController {
   private createBoardUseCase: CreateBoard;
   private getUserBoardsUseCase: GetUserBoards;
   private deleteBoardUseCase: DeleteBoard;
+  private addMembersUseCase: AddMembers
 
   constructor(boardRepository: IBoardRepository, userRepository: IUserRepository) {
     this.createBoardUseCase = new CreateBoard(boardRepository, userRepository);
     this.getUserBoardsUseCase = new GetUserBoards(boardRepository, userRepository);
     this.deleteBoardUseCase = new DeleteBoard(boardRepository, userRepository)
+    this.addMembersUseCase = new AddMembers(boardRepository, userRepository)
   }
 
   createBoard = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -63,6 +66,22 @@ export class BoardController {
       res.status(200).json({
         success: true,
         message: 'Board Deleted successfully'
+      })
+    }catch(error){
+      next(error)
+    }
+  };
+
+  addMembers = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try{
+      const boardId = req.params.id
+      const userId = req.user!.id
+      const {members} = req.body
+
+      const doc = await this.addMembersUseCase.execute({boardId, members, userId})
+      res.status(200).json({
+        success: true,
+        data: doc,
       })
     }catch(error){
       next(error)
