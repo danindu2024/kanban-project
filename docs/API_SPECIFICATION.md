@@ -67,8 +67,6 @@ POST `/auth/login`
 ### 2.3 Get Current User
 GET `/auth/me [Auth]`
 
-GET `/auth/me [Auth]`
-
 * **Description:** Validates token and returns current user data.
 
 * **Response (200 OK):**
@@ -225,6 +223,120 @@ GET `/boards/:id [Auth]`
 
 ### 3.4 Delete Board
 DELETE `/boards/:id [Auth]`
+
+### 3.5 Update Board
+PATCH `/boards/:id [Auth]`
+
+* **Permission:** Only Board Owner or Admin
+* **Body:** `{ "title": "Updated Title" }`
+* **Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "b1",
+    "title": "Updated Title",
+    "owner_id": "u1",
+    "members": ["u2"],
+    "created_at": "2025-01-15T10:30:00.000Z"
+  }
+}
+```
+* **Error (403 Forbidden):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Only board owner or admin can update this board"
+  }
+}
+```
+
+### 3.6 Add Member to Board
+POST `/boards/:id/members [Auth]`
+
+* **Permission:** Only Board Owner or Admin
+* **Body:** `{ "members": ["u3", "u4"] }`
+* **Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "b1",
+    "title": "Project Alpha",
+    "owner_id": "u1",
+    "members": ["u2", "u3", "u4"],
+    "created_at": "2025-01-15T10:30:00.000Z"
+  }
+}
+```
+
+* **Error (404 Not Found - User Doesn't Exist):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
+* **Error (400 Bad Request - Already Member):**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "User is already a member of this board"
+  }
+}
+```
+
+### 3.7 Remove Member from Board
+DELETE `/boards/:id/members/:userId [Auth]`
+
+* **Permission:** Only Board Owner or Admin
+* **Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "b1",
+    "title": "Project Alpha",
+    "owner_id": "u1",
+    "members": ["u2"],
+    "created_at": "2025-01-15T10:30:00.000Z"
+  }
+}
+```
+
+* **Error (400 Bad Request - Not a Member):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "User is not a member of this board"
+  }
+}
+```
+
+* **Error (400 Bad Request - Cannot Remove Owner):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Cannot remove board owner from members"
+  }
+}
+```
 
 * **Permission:** Only the Board Owner or Admin can delete.
 

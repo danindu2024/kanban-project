@@ -115,5 +115,21 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 
 * **Board Access:** Users can only retrieve boards where they are owner OR member
 * **Board Creation:** Any authenticated user can create boards (they become owner)
-* **Board Deletion:** Only board owner or admin can delete (Sprint 2)
-* **Implementation:** Authorization enforced via MongoDB query filters in repository layer
+* **Board Updates:** Only board owner or admin can update board metadata
+* **Member Management:** Only board owner or admin can add/remove members
+* **Board Deletion:** Only board owner or admin can delete
+* **Implementation:** Authorization enforced via use case layer checks
+
+### 3.7 Member Management Rules
+
+#### Add Member:
+
+* User ID must exist in system (USER_001 if not)
+* User cannot already be a member (VAL_001 if duplicate)
+* Owner is automatically a member (implicit, not in array)
+
+#### Remove Member:
+
+* User ID must be in members array (VAL_001 if not)
+* Cannot remove board owner (VAL_001)
+* Removing last member is allowed (owner remains)

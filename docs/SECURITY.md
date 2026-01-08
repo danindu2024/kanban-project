@@ -30,7 +30,8 @@
 | :--- | :---: | :---: | :---: | :---: |
 | **Create Board** | ✅ | ✅ | ❌ | ❌ |
 | **Delete Board** | ✅ | ✅ | ❌ | ❌ |
-| **Invite Users** | ✅ | ✅ | ❌ | ❌ |
+| **Add Members** | ✅ | ✅ | ❌ | ❌ |
+| **Remove Members** | ✅ | ✅ | ❌ | ❌ |
 | **Move Tasks** | ✅ | ✅ | ✅ | ❌ |
 | **Edit Task Content**| ✅ | ✅ | ✅ | ❌ |
 | **Delete Task** | ✅ | ✅ | ❌ | ❌ |
