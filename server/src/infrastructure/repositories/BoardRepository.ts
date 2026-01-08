@@ -40,7 +40,7 @@ export class BoardRepository implements IBoardRepository {
       // $each allows pushing an array of values at once
       $addToSet: { members: { $each: members } } 
       },
-      { new: true, runValidators: true })
+      { new: true, runValidators: true }) // Return the modified document and enfore schema rules
 
     if(!doc) return null
     return this.mapToEntity(doc)
@@ -55,6 +55,16 @@ export class BoardRepository implements IBoardRepository {
 
     if(!doc) return null
     return this.mapToEntity(doc)
+  }
+
+  async updateBoard(boardId: string, title: string): Promise<BoardEntity | null>{
+    const updatedBoard = await BoardModel.findByIdAndUpdate(
+      boardId, 
+      {title},
+      {new: true, runValidators: true}
+    )
+    if(!updatedBoard) return null
+    return this.mapToEntity(updatedBoard)
   }
 
   private mapToEntity(doc: IBoardDocument): BoardEntity {
