@@ -64,7 +64,7 @@ export class AddMembers {
         for (const memberId of members) {
             // Is this person already in the board?
             if (existingMemberSet.has(memberId) || board.owner_id.toString() === memberId) {
-               throw new AppError(ErrorCodes.VALIDATION_ERROR, 'User is already a member of this board', 400); 
+               throw new AppError(ErrorCodes.VALIDATION_ERROR, `User id ${memberId} is already a member of this board`, 400); 
             }
 
             // Does this user exist in the DB?
