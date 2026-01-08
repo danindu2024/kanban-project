@@ -1,4 +1,5 @@
 import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
+import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
 
@@ -17,12 +18,19 @@ interface CreateBoardResponseDTO {
 
 export class CreateBoard {
   private boardRepository: IBoardRepository;
+  private userRepository: IUserRepository;
 
-  constructor(boardRepository: IBoardRepository) {
+  constructor(boardRepository: IBoardRepository, userRepository: IUserRepository) {
     this.boardRepository = boardRepository;
+    this.userRepository = userRepository
   }
 
   async execute({ title, owner_id }: CreateBoardRequestDTO): Promise<CreateBoardResponseDTO> {
+    // validate user exists
+    const user = await this.userRepository.findById(owner_id);
+    if (!user) throw new AppError(ErrorCodes.USER_NOT_AUTHENTICATED, "User not found. Unauthorized", 404);
+
+    // title validation
     if(!title){
       throw new AppError(
         ErrorCodes.MISSING_INPUT, 
@@ -30,7 +38,6 @@ export class CreateBoard {
         400
       );
     }
-
     if(title.length > 100){
       throw new AppError(
         ErrorCodes.VALIDATION_ERROR,

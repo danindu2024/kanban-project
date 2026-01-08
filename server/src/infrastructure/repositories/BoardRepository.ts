@@ -14,10 +14,6 @@ export class BoardRepository implements IBoardRepository {
 
   async findAllByUserId(user_id: string): Promise<BoardEntity[]> {
     // Find boards where user is owner OR a member
-
-    // Invalid objectId(user_id) should crash and be caught by global error handler
-    // this shouldn't silently fail
-
     const docs = await BoardModel.find({
       $or: [{ owner_id: user_id }, { members: user_id }],
     });
@@ -26,12 +22,49 @@ export class BoardRepository implements IBoardRepository {
 
   async findById(id: string): Promise<BoardEntity | null> {
     
-    // Invalid objectId(user_id) should crash and be caught by global error handler
-    // this shouldn't silently fail
-    
-    const doc = await BoardModel.findById(id);
+    const doc = await BoardModel.findById({_id: id});
     if (!doc) return null;
     return this.mapToEntity(doc);
+  }
+
+  async delete(id: string): Promise<Boolean>{
+    const result = await BoardModel.deleteOne({_id: id})
+    return result.deletedCount > 0;
+  }
+
+  async addMembers(boardId: string, members: string[]): Promise<BoardEntity | null>{
+    const doc = await BoardModel.findByIdAndUpdate(
+      boardId, 
+      { 
+      // $addToSet ensures no duplicates
+      // $each allows pushing an array of values at once
+      $addToSet: { members: { $each: members } } 
+      },
+      { new: true, runValidators: true }) // Return the modified document and enfore schema rules
+
+    if(!doc) return null
+    return this.mapToEntity(doc)
+  }
+
+  async removeMember(boardId: string, memberId: string): Promise<BoardEntity | null>{
+    const doc = await BoardModel.findByIdAndUpdate(
+      boardId,
+      {$pull: {members: memberId}}, // Use $pull to remove specific item from array
+      { new: true, runValidators: true }
+    )
+
+    if(!doc) return null
+    return this.mapToEntity(doc)
+  }
+
+  async updateBoard(boardId: string, title: string): Promise<BoardEntity | null>{
+    const updatedBoard = await BoardModel.findByIdAndUpdate(
+      boardId, 
+      {title},
+      {new: true, runValidators: true}
+    )
+    if(!updatedBoard) return null
+    return this.mapToEntity(updatedBoard)
   }
 
   private mapToEntity(doc: IBoardDocument): BoardEntity {
