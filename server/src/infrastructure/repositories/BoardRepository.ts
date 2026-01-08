@@ -46,6 +46,17 @@ export class BoardRepository implements IBoardRepository {
     return this.mapToEntity(doc)
   }
 
+  async removeMember(boardId: string, memberId: string): Promise<BoardEntity | null>{
+    const doc = await BoardModel.findByIdAndUpdate(
+      boardId,
+      {$pull: {members: memberId}}, // Use $pull to remove specific item from array
+      { new: true, runValidators: true }
+    )
+
+    if(!doc) return null
+    return this.mapToEntity(doc)
+  }
+
   private mapToEntity(doc: IBoardDocument): BoardEntity {
     return {
       id: doc._id.toString(),
