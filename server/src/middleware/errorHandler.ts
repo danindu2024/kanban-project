@@ -26,7 +26,7 @@ export const errorHandler = (
     success: false,
     error: {
       code: ErrorCodes.VALIDATION_ERROR,
-      message: 'Invalid ID format',
+      message: 'Invalid OID format',
     },
   });
   return;
