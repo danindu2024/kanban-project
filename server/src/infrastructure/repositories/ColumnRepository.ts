@@ -22,10 +22,10 @@ export class ColumnRepository implements IColumnRepository {
         return columnDocs.map(doc => this.mapToEntity(doc));
     }
 
-    async  update(columnId: string, updateData: Partial<ColumnEntity>): Promise<ColumnEntity | null>{
+    async update(columnId: string, title: string): Promise<ColumnEntity | null>{
         const updatedColumn = await ColumnModel.findByIdAndUpdate(
           columnId,
-          updateData,
+          {title},
           { new: true, runValidators: true }
         );
         return updatedColumn ? this.mapToEntity(updatedColumn) : null;
