@@ -95,6 +95,8 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 | Email | 255 chars | RFC 5321 standard |
 | Password | 50 chars | Bcrypt performance limit with buffer |
 | Board Title | 100 chars | Prevent UI overflow and database bloat |
+| Column Title | 50 chars | Prevent UI overflow and database bloat |
+| No of columns | 20 columns | Prevent UI overflow |
 
 ### 3.4 JWT Configuration
 - **Algorithm:** HS256
