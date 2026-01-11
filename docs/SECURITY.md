@@ -32,6 +32,7 @@
 | **Delete Board** | ✅ | ✅ | ❌ | ❌ |
 | **Add Members** | ✅ | ✅ | ❌ | ❌ |
 | **Remove Members** | ✅ | ✅ | ❌ | ❌ |
+| **Create column** | ✅ | ✅ | ❌ | ❌ |
 | **Move Tasks** | ✅ | ✅ | ✅ | ❌ |
 | **Edit Task Content**| ✅ | ✅ | ✅ | ❌ |
 | **Delete Task** | ✅ | ✅ | ❌ | ❌ |
