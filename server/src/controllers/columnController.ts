@@ -16,7 +16,7 @@ export class ColumnController {
         userRepository: IUserRepository) {
 
         this.createColumnUseCase = new CreateColumnUseCase(columnRepository, boardRepository, userRepository);
-        this.updateColumnUseCase = new UpdateColumnUseCase(columnRepository);
+        this.updateColumnUseCase = new UpdateColumnUseCase(columnRepository, userRepository, boardRepository);
     }
 
     createColumn = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -41,9 +41,10 @@ export class ColumnController {
     updateColumn = async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const columnId = req.params.id;
-            const { title, order, new_order_index } = req.body;
-            const finalOrder = new_order_index !== undefined? new_order_index : order
-            const updatedColumn = await this.updateColumnUseCase.execute({ title, order: finalOrder }, columnId);
+            const userId = req.user!.id
+            const { title } = req.body;
+
+            const updatedColumn = await this.updateColumnUseCase.execute({userId, columnId, title});
 
             return res.status(200).json({
                 success: true,
