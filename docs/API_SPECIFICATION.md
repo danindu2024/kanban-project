@@ -351,10 +351,20 @@ POST `/columns [Auth]`
 { "board_id": "b1", "title": "In Progress" }
 ```
 
-### 4.2 Update Column Order (Drag & Drop)
+### 4.2 Move Column (Drag & Drop)
 PATCH `/columns/:id/order [Auth]`
 
 * **Body:** `{ "new_order_index": 2 }`
+
+### 4.3 Update column Details
+PATCH `/columns/:id [Auth]`
+
+* **Body:** `{ "title": "New Title" }`
+
+```JSON
+
+{ "board_id": "b1", "title": "New Title" }
+```
 
 ## 5. Tasks
 ### 5.1 Create Task
