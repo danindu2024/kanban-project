@@ -33,6 +33,7 @@
 | **Add Members** | ✅ | ✅ | ❌ | ❌ |
 | **Remove Members** | ✅ | ✅ | ❌ | ❌ |
 | **Create column** | ✅ | ✅ | ❌ | ❌ |
+| **Update column** | ✅ | ✅ | ❌ | ❌ |
 | **Move Tasks** | ✅ | ✅ | ✅ | ❌ |
 | **Edit Task Content**| ✅ | ✅ | ✅ | ❌ |
 | **Delete Task** | ✅ | ✅ | ❌ | ❌ |
