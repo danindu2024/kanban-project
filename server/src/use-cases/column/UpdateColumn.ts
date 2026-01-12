@@ -1,10 +1,13 @@
 import { IColumnRepository } from "../../domain/repositories/IColumnRepository";
+import { IUserRepository } from "../../domain/repositories/IUserRepository";
+import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
 
 interface UpdateColumnRequestDTO {
-    title?: string;
-    order?: number;
+    userId: string;
+    columnId: string
+    title: string;
 }
 
 interface UpdateColumnResponseDTO {
@@ -12,49 +15,64 @@ interface UpdateColumnResponseDTO {
     board_id: string;
     title: string;
     order: number;
-    tasks?: any[];
+    tasks?: never[]; // Strictly typed as empty/undefined based on Repo
     created_at: Date;
 }
 
 export class UpdateColumnUseCase{
     private columnRepository: IColumnRepository;
+    private userRepository: IUserRepository;
+    private boardRepository: IBoardRepository;
 
-    constructor(columnRepository: IColumnRepository){
+    constructor(
+        columnRepository: IColumnRepository,
+        userRepository: IUserRepository,
+        boardRepository: IBoardRepository
+    ){
         this.columnRepository = columnRepository;
+        this.userRepository = userRepository;
+        this.boardRepository = boardRepository;
     }
 
-    async execute({title, order}: UpdateColumnRequestDTO, columnId: string): Promise<UpdateColumnResponseDTO | null> {
-
-        //Check if EVERYTHING is undefined
-        if (title === undefined && order === undefined) {
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "At least one field (title or order) is required to update", 400);
+    async execute({userId, columnId, title}: UpdateColumnRequestDTO): Promise<UpdateColumnResponseDTO | null> {
+        // valide user exist
+        const user = await this.userRepository.findById(userId)
+        if(!user){
+            throw new AppError(ErrorCodes.USER_NOT_FOUND, 'User not found', 404)
         }
 
-        const columnExists = await this.columnRepository.findById(columnId);
-        if (!columnExists) {
-            throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Column not found", 404);
+        // validate column exists
+        const column = await this.columnRepository.findById(columnId)
+        if(!column){
+            throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, 'Column not found', 404)
         }
 
-        // Check Title ONLY if the user sent it
-        if (title !== undefined) {
-             // Checking for empty string prevents "invisible" columns
-            if (title.trim().length === 0) {
-                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Column title cannot be empty", 400);
-            }
-            if (title.length > 25) {
-                throw new AppError(ErrorCodes.VALIDATION_ERROR, "Column title must not exceed 25 characters", 400);
-            }
+        // validate board exist
+        const board = await this.boardRepository.findById(column.board_id)
+        if(!board){
+            throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Board not found', 404)
         }
 
-        // Check Order ONLY if the user sent it
-        if (order !== undefined && (typeof order !== "number" || order < 0)) {
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Column order must be a non-negative integer", 400);
+        // Authorization check
+        // only admin or owner can create columns
+        const isAdmin = user.role === 'admin'
+        const isOwner = user.id == board.owner_id
+        if(!isAdmin && !isOwner){
+            throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can update column', 403)
         }
 
-        const updatedColumn = await this.columnRepository.update(columnId, { title, order });
+        // validate title
+        if (!title || title.trim().length === 0) {
+            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Title can not be empty", 400);
+        }
+        if(title.length > 50){
+            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Column title must not exceed 50 characters", 400);
+        }
+
+        const updatedColumn = await this.columnRepository.update(columnId, title);
 
         if (!updatedColumn) {
-            throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Column not found", 404);//I added new error code
+            throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Column not found", 404);
         }
 
         return {
@@ -62,7 +80,7 @@ export class UpdateColumnUseCase{
             board_id: updatedColumn.board_id,
             title: updatedColumn.title,
             order: updatedColumn.order,
-            tasks: undefined, // Assuming tasks are not updated here
+            tasks: undefined, // tasks are not updated here
             created_at: updatedColumn.created_at
         };
     }

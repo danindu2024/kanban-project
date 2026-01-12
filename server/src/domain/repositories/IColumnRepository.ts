@@ -7,6 +7,8 @@ export interface IColumnRepository {
       order: number;}): Promise<Column>;
 
   findByBoardId(boardId: string): Promise<Column[]>;
-  update(columnId: string, updateData: Partial<Column>): Promise<Column | null>;
+  update(columnId: string, title: string): Promise<Column | null>;
   findById(id: string): Promise<Column | null>;
+  delete(id: string): Promise<Boolean>;
+  moveColumn(id: string, newOrder: number): Promise<void>
 }

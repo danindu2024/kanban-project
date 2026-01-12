@@ -9,6 +9,8 @@ services:
     # Map the container's port to your machine's port
     ports:
       - "27017:27017"
+    # Convert Local Docker to a Replica Set
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     # Create a volume so your data persists even if you stop Docker
     volumes:
       - mongo-data:/data/db

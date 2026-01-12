@@ -351,10 +351,55 @@ POST `/columns [Auth]`
 { "board_id": "b1", "title": "In Progress" }
 ```
 
-### 4.2 Update Column Order (Drag & Drop)
+### 4.2 Move Column (Drag & Drop)
 PATCH `/columns/:id/order [Auth]`
 
 * **Body:** `{ "new_order_index": 2 }`
+
+```json
+{
+  "success": true,
+  "message": "Column moved successfully"
+}
+```
+
+### 4.3 Update column Details
+PATCH `/columns/:id [Auth]`
+
+* **Body:** `{ "title": "New Title" }`
+
+```JSON
+
+{ "board_id": "b1", "title": "New Title" }
+```
+
+### 4.4 Delete Column
+DELETE `/columns/:id [Auth]`
+
+* **Description:** Deletes a column.
+* **Constraint:** Column must be empty (no tasks).
+
+* **Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Column deleted successfully"
+}
+```
+
+* **Error (400 Bad Request - Not Empty):**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Cannot delete column with existing tasks. Please move or delete them first."
+  }
+}
+```
+
+
 
 ## 5. Tasks
 ### 5.1 Create Task
@@ -434,6 +479,7 @@ DELETE `/tasks/:id [Auth]`
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
 |VAL_002|MISSING_INPUT|Required fields are not provided|User hasn't provided required fields|
+|VAL_003|Business Rule Violation|Action rejected due to current resource state|Deleting a non-empty column|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
 |URL_001|URL Not Found|URL Not Fount|Undefined URL|
 |SERVER_001|INTERNAL ERROR|Internal Server doesn't work|server crashes|
