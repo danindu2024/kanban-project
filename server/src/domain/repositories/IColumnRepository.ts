@@ -9,4 +9,6 @@ export interface IColumnRepository {
   findByBoardId(boardId: string): Promise<Column[]>;
   update(columnId: string, title: string): Promise<Column | null>;
   findById(id: string): Promise<Column | null>;
+  delete(id: string): Promise<Boolean>;
+  moveColumn(id: string, newOrder: number): Promise<void>
 }
