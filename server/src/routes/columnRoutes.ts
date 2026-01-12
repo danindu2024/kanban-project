@@ -16,11 +16,7 @@ const router = Router()
 router.use(protect)
 
 router.post("/", columnController.createColumn)
-
-// rename title
 router.patch("/:id", columnController.updateColumn)
-
-// drag and drop
-router.patch("/:id/order", columnController.updateColumn)
+router.patch("/:id/order", columnController.moveColumn)
 
 export default router
