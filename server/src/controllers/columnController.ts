@@ -3,20 +3,24 @@ import { IBoardRepository } from "../domain/repositories/IBoardRepository";
 import { IUserRepository } from "../domain/repositories/IUserRepository";
 import { CreateColumnUseCase } from "../use-cases/column/CreateColumn";
 import { UpdateColumnUseCase } from "../use-cases/column/UpdateColumn";
+import { MoveColumnUseCase } from "../use-cases/column/MoveColumn";
 import { Request, Response, NextFunction } from "express";
 import { AuthRequest } from "../middleware/authMiddleware";
 
 export class ColumnController {
     private createColumnUseCase: CreateColumnUseCase;
     private updateColumnUseCase: UpdateColumnUseCase;
+    private moveColumnUseCase: MoveColumnUseCase;
     
     constructor(
         columnRepository: IColumnRepository, 
         boardRepository: IBoardRepository,
-        userRepository: IUserRepository) {
+        userRepository: IUserRepository,
+    ) {
 
         this.createColumnUseCase = new CreateColumnUseCase(columnRepository, boardRepository, userRepository);
         this.updateColumnUseCase = new UpdateColumnUseCase(columnRepository, userRepository, boardRepository);
+        this.moveColumnUseCase = new MoveColumnUseCase(columnRepository, userRepository, boardRepository)
     }
 
     createColumn = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -52,6 +56,23 @@ export class ColumnController {
             });
         } catch (error) {
             next(error);
+        }
+    }
+
+    moveColumn = async (req: AuthRequest, res: Response, next: NextFunction) => {
+        try{
+            const userId = req.user!.id
+            const columnId = req.params.id
+            const {new_order_index} = req.body
+
+            await this.moveColumnUseCase.execute({userId, columnId, newOrder: new_order_index})
+
+            res.status(200).json({
+                success: true,
+                message: "Column moved successfully"
+            })
+        }catch(error){
+            next(error)
         }
     }
 }
