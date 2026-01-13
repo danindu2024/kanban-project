@@ -7,7 +7,7 @@ export interface ITaskDocument extends Document {
   title: string;
   description?: string;
   priority: Priority;
-  assignee_id?: Schema.Types.ObjectId;
+  assignee_id?: mongoose.Types.ObjectId | null;
   order: number;
   created_at: Date;
 }
