@@ -56,7 +56,9 @@ To build "FlowState": a streamlined, professional-grade Kanban board tailored fo
 
 #### C. Column & Task Management
 * **FR-06:** Users shall be able to create custom columns (e.g., "Backlog", "Review").
-* **FR-07:** Users shall be able to create Tasks with Title, Description, and Priority (Low/Med/High).
+* **FR-07:** Board Members (Owner, Admin, and Members) shall be able to create Tasks with Title, Description, Priority, and Assignee.
+* **FR-07.1:** Board Members shall be able to update task details (Title, Priority, Assignee).
+* **FR-07.2:** Only Board Owners and Admins shall be able to delete tasks (to prevent data loss).
 * **FR-08:** Users shall be able to drag and drop tasks between columns.
 * **FR-09:** The system shall persist the new column order/task status immediately after a drop event.
 
