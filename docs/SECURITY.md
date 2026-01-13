@@ -34,6 +34,8 @@
 | **Remove Members** | ✅ | ✅ | ❌ | ❌ |
 | **Create column** | ✅ | ✅ | ❌ | ❌ |
 | **Update column** | ✅ | ✅ | ❌ | ❌ |
+| **Create Task** | ✅ | ✅ | ✅ | ❌ |
+| **Add and change Priority/Assignee** | ✅ | ✅ | ✅ | ❌ |
 | **Move Tasks** | ✅ | ✅ | ✅ | ❌ |
 | **Edit Task Content**| ✅ | ✅ | ✅ | ❌ |
 | **Delete Task** | ✅ | ✅ | ❌ | ❌ |
