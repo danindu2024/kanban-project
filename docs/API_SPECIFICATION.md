@@ -405,6 +405,8 @@ DELETE `/columns/:id [Auth]`
 ### 5.1 Create Task
 POST `/tasks [Auth]`
 
+* **Permission:** User must be Board Owner OR Member.
+
 * **Body:**
 
 ```JSON
@@ -414,6 +416,17 @@ POST `/tasks [Auth]`
   "column_id": "c1",
   "title": "Implement Login",
   "priority": "high"
+}
+```
+
+* **Error (403 Forbidden):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "You must be a member of this board to create tasks."
+  }
 }
 ```
 
@@ -435,15 +448,52 @@ PATCH `/tasks/:id/move [Auth]`
 ### 5.3 Update Task Details
 PATCH `/tasks/:id [Auth]`
 
+* **Permission:** Board Owner, Admin, or Member.
+* **Description:** Updates any subset of task fields. Used for renaming, changing description, re-prioritizing, or assigning users.
+* **Validation:** - `priority` must be one of `['low', 'medium', 'high']`.
+  - `assignee_id` must be a valid user who is a **Member** of the board (or the Owner).
+
 * **Body:** (Any subset of fields)
 
 ```JSON
 
-{ "title": "New Title", "description": "Updated description" }
+{ 
+  "title": "New Title", 
+  "description": "Updated description",
+  "priority": "high", 
+  "assignee_id": "u5"
+}
+
+```
+
+* **Body (Example - Unassign):**
+```json
+{ 
+  "assignee_id": null 
+}
 ```
 
 ### 5.4 Delete Task
 DELETE `/tasks/:id [Auth]`
+* **Permission:** RESTRICTED. Only Board Owner or Admin can delete tasks.
+* **Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Task deleted successfully"
+}
+```
+
+* **Error (403 Forbidden):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Only board owner or admin can delete tasks."
+  }
+}
+```
 
 | Code           | Meaning     | Context             |
 | :-------------- | :------- | :---------------------- |

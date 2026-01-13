@@ -58,7 +58,7 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 | `board_id`    | ObjectId | Ref: Boards (For faster querying) |
 | `title`       | String   | Task summary                      |
 | `description` | String   | Markdown supported                |
-| `priority`    | String   | ENUM: ['low', 'medium', 'high']   |
+| `priority`    | String   | ENUM: ['low', 'medium', 'high'] - Default: 'low'  |
 | `assignee_id` | ObjectId | Ref: Users (Nullable, Single assignee only)             |
 | `order`       | Number   | For drag-and-drop positioning     |
 
@@ -135,3 +135,11 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 * User ID must be in members array (VAL_001 if not)
 * Cannot remove board owner (VAL_001)
 * Removing last member is allowed (owner remains)
+
+### 3.8 Task Authorization Model
+
+* **Create Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
+* **Update Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
+* **Assignee Validation:** When updating `assignee_id`, the backend must verify the target user is a member of the board.
+* **Delete Task:** Restricted to Board Owner or Admin only.
+* **Move Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.

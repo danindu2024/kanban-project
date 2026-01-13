@@ -14,7 +14,7 @@ export class TaskRepository implements ITaskRepository {
         title: string; 
         description?: string; 
         priority: Priority; 
-        assignee_id?: string; 
+        assignee_id?: string | null
         order: number }): Promise<TaskEntity>{
             const newTask = new TaskModel(taskData)
             const savedTask = await newTask.save()
@@ -38,8 +38,12 @@ export class TaskRepository implements ITaskRepository {
     return taskDocs.map((doc) => this.mapToEntity(doc));
   }
 
-  async update(taskId: string, updatesData: Partial<Omit<TaskEntity, 
-    'id' | 'board_id' | 'column_id'>>): Promise<TaskEntity | null>{
+  async update(taskId: string, updatesData: {
+        title: string, 
+        description?: string, 
+        priority: Priority, 
+        assignee_id?: string | null}): Promise<TaskEntity | null>{
+
     const updatedTask = await TaskModel.findByIdAndUpdate(
       taskId,
       updatesData,
@@ -50,8 +54,48 @@ export class TaskRepository implements ITaskRepository {
   }
 
   async delete(taskId: string): Promise<boolean> {
-    const result = await TaskModel.deleteOne({ _id: taskId });
-    return result.deletedCount > 0;
+    // use session for safe transaction
+    const session = await mongoose.startSession()
+    session.startTransaction()
+
+    try{
+        // Fetch the task within the session
+        const task = await TaskModel.findById(taskId).session(session);
+
+        // Safety against race condition: If task doesn't exist, throw error
+        if (!task) {
+            throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task nor found', 404)
+        }
+
+        // Use-cases layer ensure task exists
+        const currentOrder = task!.order
+        const currentColumnId = task!.column_id.toString();
+
+        const result = await TaskModel.deleteOne({ _id: taskId }).session(session);
+
+        // if not deleted, abort transaction
+        if (result.deletedCount === 0) {
+            await session.abortTransaction();
+            return false;
+        }
+
+        // close the gap of deleted item
+        await TaskModel.updateMany(
+            {column_id: currentColumnId,
+            order: {$gt: currentOrder}
+            },
+            {$inc: {order: -1}}
+        ).session(session)
+
+        // commit changes
+        await session.commitTransaction()
+        return true
+    }catch(error){
+        await session.abortTransaction()
+        throw error
+    }finally{
+        session.endSession()
+    }
   }
 
   async findById(taskId: string): Promise<TaskEntity | null> {
@@ -60,6 +104,7 @@ export class TaskRepository implements ITaskRepository {
   }
 
   async moveTask(taskId: string, targetColumnId: string, newOrder: number): Promise<void> {
+    // use session for safe transaction
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -67,29 +112,40 @@ export class TaskRepository implements ITaskRepository {
 
         // Fetch the task to check its current location
         const task = await TaskModel.findById(taskId).session(session);
-        if (!task) 
-          throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task not found', 404);
+        // Safety against race condition: If task doesn't exist, throw error
+        if (!task) {
+            throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task nor found', 404)
+        }
 
-        const currentColumnId = task.column_id.toString();
+        // Use-cases layer ensure task exists
+        const currentColumnId = task!.column_id.toString();
         const isSameColumn = currentColumnId === targetColumnId;
+        const currentOrder = task!.order
 
         if (isSameColumn) {
             // SCENARIO A: Reordering within the SAME column
-            if (newOrder > task.order) {
+            // order doesn't change
+            if(currentOrder === newOrder){
+                await session.abortTransaction()
+                session.endSession()
+                return
+            }
+    
+            if (newOrder > currentOrder) {
                 // Moving DOWN: Shift items between old and new positions UP (-1)
                 await TaskModel.updateMany(
                     { 
                         column_id: targetColumnId, 
-                        order: { $gt: task.order, $lte: newOrder } 
+                        order: { $gt: currentOrder, $lte: newOrder } 
                     },
                     { $inc: { order: -1 } }
                 ).session(session);
-            } else if (newOrder < task.order) {
+            } else {
                 // Moving UP: Shift items between new and old positions DOWN (+1)
                 await TaskModel.updateMany(
                     { 
                         column_id: targetColumnId, 
-                        order: { $gte: newOrder, $lt: task.order } 
+                        order: { $gte: newOrder, $lt: currentOrder } 
                     },
                     { $inc: { order: 1 } }
                 ).session(session);
@@ -97,21 +153,20 @@ export class TaskRepository implements ITaskRepository {
         } else {
             // SCENARIO B: Moving to a DIFFERENT column
             
-            // 1. Make room in the TARGET column (Shift items >= newOrder DOWN)
+            // Make room in the TARGET column : Shift items >= newOrder DOWN(+1)
             await TaskModel.updateMany(
                 { column_id: targetColumnId, order: { $gte: newOrder } },
                 { $inc: { order: 1 } }
             ).session(session);
 
-            // 2. (Optional) Close the gap in the SOURCE column
-            // We shift items > oldOrder UP to keep the list clean
+            // Close the gap in the SOURCE column: Shift items < currentOrder UP(-1)
             await TaskModel.updateMany(
-                { column_id: task.column_id, order: { $gt: task.order } },
+                { column_id: currentColumnId, order: { $gt: currentOrder } },
                 { $inc: { order: -1 } }
             ).session(session);
         }
 
-        // 3. Finally, move the task itself
+        // Finally, move the task itself
         await TaskModel.findByIdAndUpdate(
             taskId, 
             { 

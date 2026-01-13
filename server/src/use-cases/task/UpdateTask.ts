@@ -3,8 +3,11 @@ import { Priority } from "../../domain/entities/Task";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
+import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
 
 interface UpdateTaskRequestDTO {
+    taskId: string;
+    userId: string;
     title?: string;
     description?: string;
     priority?: Priority;
@@ -26,55 +29,96 @@ interface UpdateTaskResponseDTO {
 export class UpdateTaskUseCase {
     private taskRepository: ITaskRepository;
     private userRepository: IUserRepository;
+    private boardRepository: IBoardRepository;
 
-    constructor(taskRepository: ITaskRepository, userRepository: IUserRepository) {
+    constructor(
+        taskRepository: ITaskRepository, 
+        userRepository: IUserRepository,
+        boardRepository: IBoardRepository
+    ) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.boardRepository = boardRepository;
     }
     
-    async execute({ title, description, priority, assigneeId }: UpdateTaskRequestDTO, 
-        taskId: string): Promise<UpdateTaskResponseDTO | null> {
-            
-        const task = await this.taskRepository.findById(taskId);
+    async execute({ title, description, priority, assigneeId, userId, taskId }: UpdateTaskRequestDTO)
+    : Promise<UpdateTaskResponseDTO | null> {
+        // basic input validation
+        if( title === undefined && description === undefined && priority === undefined && assigneeId === undefined ){
+            throw new AppError(ErrorCodes.MISSING_INPUT, "At least one field is required to update", 400);
+        }
+        
+        // Fetch independent data in parallel (User and Task)
+        const [user, task] = await Promise.all([
+            this.userRepository.findById(userId),
+            this.taskRepository.findById(taskId)
+        ]);
+
+        if (!user) {
+            throw new AppError(ErrorCodes.USER_NOT_FOUND, "User not found", 404);
+        }
         if (!task) {
             throw new AppError(ErrorCodes.TASK_NOT_FOUND, "Task not found", 404);
         }
 
-        if( title === undefined && description === undefined && priority === undefined && assigneeId === undefined ){
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "At least one field is required to update", 400);
+        // Fetch Board (Dependent on Task)
+        const board = await this.boardRepository.findById(task.board_id)
+        if(!board){
+            throw new AppError(ErrorCodes.BOARD_NOT_FOUND, "Board not found", 404);
         }
 
+        // Only admin, board owner or members can update a task
+        const isAdmin = user.role === 'admin'
+        const isBoardOwner = user.id.toString() === board.owner_id.toString()
+        const isMember = board.members.some((member) => member.toString() === user.id.toString())
+
+        if(!isAdmin && !isBoardOwner && !isMember){
+            throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Not Authorized', 403)
+        }
+
+        // Data Merging for Partial Updates
+        const titleToUpdate = title !== undefined ? title : task.title;
+        const priorityToUpdate = priority !== undefined ? priority : task.priority;
+        // Description can be null/empty, so we check strictly against undefined
+        const descriptionToUpdate = description !== undefined ? description : task.description;
+
+        // title validation
         if( title !== undefined ){
             if( title.trim().length === 0 ){
                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task title cannot be empty", 400);
             }
-
             if( title.length > 50 ){
                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task title must not exceed 50 characters", 400);
             }
         }
 
-        if( description !== undefined ){
-            if( description.length > 300 ){
-                throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task description must not exceed 300 characters", 400);
-            }
+        // description validation
+        if( description !== undefined && description.length > 500){
+            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task description must not exceed 500 characters", 400);
         }
  
+        // priority validation
         if( priority !== undefined ){
             if( !['low', 'medium', 'high'].includes(priority) ){
                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Invalid priority value", 400);
             }
         }
 
-        if( assigneeId !== undefined && assigneeId !== null){
-            const assignee = await this.userRepository.findById(assigneeId);
-            if(!assignee){
-                throw new AppError(ErrorCodes.USER_NOT_FOUND, "Assignee user not found", 404);
+        if( assigneeId ){
+            const isBoardMember = board.members.some((member) =>member.toString() === assigneeId )
+            const isBoardOwner = board.owner_id.toString() === assigneeId;
+            if(!isBoardMember && !isBoardOwner){
+                throw new AppError(ErrorCodes.VALIDATION_ERROR, "Assignee must be a board member", 400);
             }
         }
 
         const updatedTask = await this.taskRepository.update(taskId, 
-            { title, description, priority, assignee_id:assigneeId });
+            { 
+                title: titleToUpdate, 
+                description: descriptionToUpdate, 
+                priority: priorityToUpdate, 
+                assignee_id:assigneeId 
+            });
         
         if(!updatedTask){
             throw new AppError(ErrorCodes.TASK_NOT_FOUND, "Task not found", 404);

@@ -21,22 +21,25 @@ export class TaskController {
         userRepository: IUserRepository) {
 
         this.createTaskUseCase = new CreateTaskUseCase(taskRepository, columnRepository, boardRepository, userRepository);
-        this.updateTaskUseCase = new UpdateTaskUseCase(taskRepository, userRepository);
-        this.moveTaskUseCase = new MoveTaskUseCase(taskRepository, columnRepository);
+        this.updateTaskUseCase = new UpdateTaskUseCase(taskRepository, userRepository, boardRepository);
+        this.moveTaskUseCase = new MoveTaskUseCase(taskRepository, columnRepository, userRepository, boardRepository);
         this.deleteTaskUseCase = new DeleteTaskUseCase(taskRepository, userRepository, boardRepository);
     }
 
     createTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const { board_id, column_id, title, description, priority, assignee_id, order } = req.body;
+            const { board_id, column_id, title, description, priority, assignee_id } = req.body;
+            const userId = req.user!.id
+
             const task = await this.createTaskUseCase.execute({
                 boardId: board_id, 
                 columnId: column_id, 
                 title, 
                 description, 
                 priority, 
-                assigneeId: assignee_id, 
-                order});
+                assigneeId: assignee_id,  
+                userId});
+
             res.status(201).json({
                 success: true,
                 data: task
@@ -52,12 +55,16 @@ export class TaskController {
 
             const taskId = req.params.id
             const { title, description, priority, assignee_id } = req.body;
+            const userId = req.user!.id;
 
             const updateTaskData = await this.updateTaskUseCase.execute({ 
                 title, 
                 description, 
                 priority, 
-                assigneeId: assignee_id }, taskId);
+                assigneeId: assignee_id,
+                taskId,
+                userId
+             });
 
             res.status(200).json({
                 success: true,
@@ -71,10 +78,16 @@ export class TaskController {
     moveTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const taskId = req.params.id;
-            const { target_column_id, new_order } = req.body;
+            const userId = req.user!.id;
+            const { target_column_id, new_order_index } = req.body;
 
-            await this.moveTaskUseCase.execute(taskId, 
-                {targetColumnId: target_column_id, newOrder: new_order});
+            await this.moveTaskUseCase.execute({
+                targetColumnId: target_column_id, 
+                newOrder: new_order_index,
+                userId,
+                taskId
+            });
+            
             res.status(200).json({
                 success: true,
                 message: "Task moved successfully"
@@ -89,7 +102,7 @@ export class TaskController {
             const taskId = req.params.id;
             const userId = req.user!.id;
 
-            await this.deleteTaskUseCase.execute(taskId, userId);
+            await this.deleteTaskUseCase.execute({taskId, userId});
             res.status(200).json({
                 success: true,
                 message: "Task deleted successfully"
