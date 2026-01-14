@@ -184,6 +184,23 @@ export class TaskRepository implements ITaskRepository {
     }
   }
 
+  async countTasks(columnId: string): Promise<number>{
+    return await TaskModel.countDocuments({column_id: columnId})
+  }
+
+    // Remove assignee after a board member is removed
+    async unassignUserFromBoard(boardId: string, userId: string): Promise<void> {
+        await TaskModel.updateMany(
+            { 
+                board_id: boardId, 
+                assignee_id: userId 
+            },
+            { 
+                $set: { assignee_id: null } 
+            }
+        );
+    }
+
     private mapToEntity(doc: ITaskDocument): TaskEntity{
         return{
           id: doc._id.toString(),
