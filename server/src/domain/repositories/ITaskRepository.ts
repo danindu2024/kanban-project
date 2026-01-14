@@ -26,4 +26,6 @@ export interface ITaskRepository {
 
   // Handles moving between columns and reordering
   moveTask(taskId: string, targetColumnId: string, newOrder: number): Promise<void>;
+  countTasks(columnId: string): Promise<number>
+  unassignUserFromBoard(boardId: string, userId: string): Promise<void>
 }
