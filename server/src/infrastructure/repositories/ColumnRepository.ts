@@ -1,6 +1,7 @@
 import { IColumnRepository } from '../../domain/repositories/IColumnRepository';
 import { Column as ColumnEntity} from '../../domain/entities/Column';
 import ColumnModel, { IColumnDocument } from '../models/ColumnSchema';
+import TaskModel from '../models/TaskSchema';
 import mongoose from 'mongoose';
 import { AppError } from '../../utils/AppError';
 import { ErrorCodes } from '../../constants/errorCodes';
@@ -40,8 +41,51 @@ export class ColumnRepository implements IColumnRepository {
     }
 
     async delete(id: string): Promise<Boolean>{
-      const isDelete = await ColumnModel.deleteOne({_id: id})
-      return isDelete.deletedCount > 0
+        const session = await mongoose.startSession()
+        session.startTransaction()
+        try{
+            // fetch column
+            const column = await ColumnModel.findById(id).session(session)
+            if(!column){
+                throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Column not found", 404)
+            }
+
+            // check tasks exists
+            const tasksCount = await TaskModel.countDocuments({column_id: id}).session(session)
+            
+            // Can't delete column with existing tasks
+            if(tasksCount > 0){
+                throw new AppError(ErrorCodes.VALIDATION_ERROR, "Cannot delete column with existing tasks", 400)
+            }
+
+            const deleteResult = await ColumnModel.deleteOne({_id: id}).session(session)
+
+            if (deleteResult.deletedCount === 0) {
+                // This is safe because we return immediately and never hit the catch block
+                await session.abortTransaction();
+                return false;
+            }
+
+            // reorder remaining columns
+            await ColumnModel.updateMany(
+                {
+                    board_id:  column.board_id,
+                    order: {$gt: column.order}
+                },
+                {$inc: {order: -1}}
+            ).session(session)
+
+            await session.commitTransaction()
+            return true
+
+        }catch(error){
+            if(session.inTransaction()){
+                await session.abortTransaction()
+            }
+            throw error
+        }finally{
+            await session.endSession()
+        }
     }
 
     async moveColumn(id: string, newOrder: number): Promise<void>{

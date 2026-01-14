@@ -18,5 +18,6 @@ router.use(protect)
 router.post("/", columnController.createColumn)
 router.patch("/:id", columnController.updateColumn)
 router.patch("/:id/order", columnController.moveColumn)
+router.delete("/:id", columnController.deleteColumn)
 
 export default router

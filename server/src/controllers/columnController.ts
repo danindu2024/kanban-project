@@ -4,6 +4,7 @@ import { IUserRepository } from "../domain/repositories/IUserRepository";
 import { CreateColumnUseCase } from "../use-cases/column/CreateColumn";
 import { UpdateColumnUseCase } from "../use-cases/column/UpdateColumn";
 import { MoveColumnUseCase } from "../use-cases/column/MoveColumn";
+import { DeleteColumnUseCase } from "../use-cases/column/DeleteColumn";
 import { Request, Response, NextFunction } from "express";
 import { AuthRequest } from "../middleware/authMiddleware";
 
@@ -11,6 +12,7 @@ export class ColumnController {
     private createColumnUseCase: CreateColumnUseCase;
     private updateColumnUseCase: UpdateColumnUseCase;
     private moveColumnUseCase: MoveColumnUseCase;
+    private deleteColumnUseCase: DeleteColumnUseCase
     
     constructor(
         columnRepository: IColumnRepository, 
@@ -21,6 +23,7 @@ export class ColumnController {
         this.createColumnUseCase = new CreateColumnUseCase(columnRepository, boardRepository, userRepository);
         this.updateColumnUseCase = new UpdateColumnUseCase(columnRepository, userRepository, boardRepository);
         this.moveColumnUseCase = new MoveColumnUseCase(columnRepository, userRepository, boardRepository)
+        this.deleteColumnUseCase = new DeleteColumnUseCase(columnRepository, userRepository, boardRepository)
     }
 
     createColumn = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -71,6 +74,22 @@ export class ColumnController {
                 success: true,
                 message: "Column moved successfully"
             })
+        }catch(error){
+            next(error)
+        }
+    }
+
+    deleteColumn = async (req: AuthRequest, res: Response, next: NextFunction) => {
+        try{
+            const userId = req.user!.id
+            const columnId = req.params.id
+
+            await this.deleteColumnUseCase.execute({userId, columnId})
+            res.status(200).json({
+                success: true,
+                message: "Column deleted successfully"
+            })
+
         }catch(error){
             next(error)
         }
