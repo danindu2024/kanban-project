@@ -117,21 +117,6 @@
 
 **Sprint 2 Plan:** Implement express-validator or DOMPurify
 
-### 8.2 Race Condition in Registration
-**Status:** Known issue, deferred to Sprint 2
-
-**Scenario:**
-- Two simultaneous registrations with same email
-- MongoDB unique index catches duplicate
-- User sees generic "INTERNAL_ERROR" instead of "USER_ALREADY_EXISTS"
-
-**Mitigation:** 
-- Occurs only under high concurrent load
-- Database integrity maintained via unique index
-- Acceptable for MVP with low user base
-
-**Sprint 2 Plan:** Add try-catch for MongoDB E11000 errors
-
 ### 8.3 Password Policy
 **Current Requirements:**
 - Minimum 8 characters
@@ -155,3 +140,6 @@
 
 * `GET /boards/invalid-id` → 400 Bad Request
 * Corrupted JWT with malformed userId → 500 Internal Server Error (indicates server bug)
+
+### 9 Race Condition in Registration
+* **security pattern** Solved using MongoDB ACID Transactions with Pessimistic Locking on the parent Column document
