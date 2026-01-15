@@ -36,10 +36,11 @@ export class MoveTaskUseCase {
             throw new AppError(ErrorCodes.VALIDATION_ERROR, "Target column and non-negative order are required", 400);
         }
 
-        // Fetch independent data in parallel (User and Task)
-        const [user, task] = await Promise.all([
+        // Fetch independent data in parallel (User ,Task, and column)
+        const [user, task, targetColumn] = await Promise.all([
             this.userRepository.findById(userId),
-            this.taskRepository.findById(taskId)
+            this.taskRepository.findById(taskId),
+            this.columnRepository.findById(targetColumnId)
         ]);
 
         if (!user) {
@@ -48,18 +49,15 @@ export class MoveTaskUseCase {
         if (!task) {
             throw new AppError(ErrorCodes.TASK_NOT_FOUND, "Task not found", 404);
         }
+        if(!targetColumn) {
+            throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Target column does not exist", 404);
+        }
 
-        // fetch Board and Target Column in parallel (Dependent on task existence)
-        const [board, targetColumn] = await Promise.all([
-            this.boardRepository.findById(task.board_id),
-            this.columnRepository.findById(targetColumnId)
-        ]);
+        // fetch Board seperately as it depends on task
+        const board = await this.boardRepository.findById(task.board_id)
 
         if(!board){
             throw new AppError(ErrorCodes.BOARD_NOT_FOUND, "Board not found", 404);
-        }
-        if(!targetColumn) {
-            throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Target column does not exist", 404);
         }
 
         // Only admin, board owner or members can move a task
@@ -80,22 +78,28 @@ export class MoveTaskUseCase {
             );
         }
 
-        // Validate Order Logic
+        // Get last task index
         const isSameColumn = task.column_id.toString() === targetColumnId;
-        const targetColumnTasks = isSameColumn 
-            ? await this.taskRepository.findByColumnId(task.column_id) // Fetch source col if same
-            : await this.taskRepository.findByColumnId(targetColumnId); // Fetch target col if diff
-
-        const taskCount = targetColumnTasks.length;
+        const taskCount = isSameColumn 
+            ? await this.taskRepository.countTasks(task.column_id) // Fetch source col if same
+            : await this.taskRepository.countTasks(targetColumnId); // Fetch target col if diff
 
         const maxAllowedOrder = isSameColumn ? taskCount - 1 : taskCount;
+
+        // maximum tasks per column is 20
+        if(maxAllowedOrder >20){
+            throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Maximum tasks per column is 20', 400)
+        }
+
+        // new order must be less than last task index
         if (newOrder > maxAllowedOrder) {
             throw new AppError(
                 ErrorCodes.VALIDATION_ERROR, 
-                `New order (${newOrder}) exceeds maximum index (${maxAllowedOrder})`, 
+                `New order (${newOrder}) exceeds last task index of (${maxAllowedOrder})`, 
                 400
             );
         }
+        
         await this.taskRepository.moveTask(taskId, targetColumnId, newOrder);
     }
 }
