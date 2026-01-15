@@ -5,6 +5,7 @@ import { Priority } from '../../domain/entities/Task';
 import { IColumnRepository } from '../../domain/repositories/IColumnRepository';
 import { IBoardRepository } from '../../domain/repositories/IBoardRepository';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
+import { businessRules } from '../../constants/businessRules';
 
 interface CreateTaskRequestDTO {
     userId: string;
@@ -48,20 +49,24 @@ export class CreateTaskUseCase {
 
     async execute({ boardId, columnId, title, description, priority, assigneeId, userId}: CreateTaskRequestDTO): 
         Promise<CreateTaskResponseDTO> {
-        // Check the presense of data
+        // Check the presence of data
         // priority validate later below
         if(!title || !boardId || !columnId){
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Missing required fields", 400);
+            throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, "Missing required fields", 400);
         }
 
+        // fetch user and board in parallel
+        const [user, board] = await Promise.all([
+            this.userRepository.findById(userId),
+            this.boardRepository.findById(boardId)
+        ]) 
+
         // verify user exists
-        const user = await this.userRepository.findById(userId);
         if (!user) {
             throw new AppError(ErrorCodes.USER_NOT_FOUND, "User not found", 404);
         }
 
         // verify board exists
-        const board = await this.boardRepository.findById(boardId);
         if(!board){
             throw new AppError(ErrorCodes.BOARD_NOT_FOUND, "Board not found", 404);
         }
@@ -75,8 +80,9 @@ export class CreateTaskUseCase {
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Not Authorized', 403)
         }
 
-        // validate presense of the column
+        // validate column exists and in the specific board
         const column = await this.columnRepository.findById(columnId);
+
         if(!column || column.board_id.toString() !== boardId){
             throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Column not found in the specified board", 404);
         }
@@ -87,7 +93,7 @@ export class CreateTaskUseCase {
             const isAssigneeMember = board.members.some(m => m.toString() === assigneeId);
 
             if (!isAssigneeOwner && !isAssigneeMember) {
-                 throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, "Assignee must be a member of the board", 403);
+                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Assignee must be a member of the board", 400);
             }
         }
 
@@ -95,16 +101,9 @@ export class CreateTaskUseCase {
         if (title.trim().length === 0) {
             throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task title cannot be empty", 400);
         }
-        if (title.length > 50) {
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task title must not exceed 50 characters", 400);
+        if (title.length > businessRules.MAX_TASK_TITLE_LENGTH) {
+            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, "Task title must not exceed 100 characters", 400);
         }
-
-        // Order automatically become the last task order in the column
-        const order = await this.taskRepository.countTasks(columnId)
-
-        // MAX no of tasks is 20 per column
-        if(order+1 > 20)
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Cannot create more than 20 tasks per column', 400)
 
         // Validate priority
         const finalPriority: Priority = priority || 'low'; // priority set to low by default
@@ -113,8 +112,8 @@ export class CreateTaskUseCase {
         }
 
         // Validate description
-        if(description && description.length > 500){
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task description must not exceed 500 characters", 400);
+        if(description && description.length > businessRules.MAX_TASK_DESCRIPTION_LENGTH){
+            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, "Task description must not exceed 1000 characters", 400);
         }
     
         const task = await this.taskRepository.create({ 
@@ -123,8 +122,8 @@ export class CreateTaskUseCase {
             title, 
             description, 
             priority: finalPriority, 
-            assignee_id: assigneeId, 
-            order });
+            assignee_id: assigneeId
+        });
 
         return {
             id: task.id,
