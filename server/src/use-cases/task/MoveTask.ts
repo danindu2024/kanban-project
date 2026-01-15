@@ -87,7 +87,7 @@ export class MoveTaskUseCase {
         const maxAllowedOrder = isSameColumn ? taskCount - 1 : taskCount;
 
         // maximum tasks per column is 20
-        if(maxAllowedOrder >20){
+        if(maxAllowedOrder+1 >20){
             throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Maximum tasks per column is 20', 400)
         }
 

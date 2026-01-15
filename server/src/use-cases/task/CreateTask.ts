@@ -103,7 +103,7 @@ export class CreateTaskUseCase {
         const order = await this.taskRepository.countTasks(columnId)
 
         // MAX no of tasks is 20 per column
-        if(order > 20)
+        if(order+1 > 20)
             throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Cannot create more than 20 tasks per column', 400)
 
         // Validate priority
