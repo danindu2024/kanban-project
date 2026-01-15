@@ -2,10 +2,12 @@ import { ITaskRepository } from "../../domain/repositories/ITaskRepository";
 import { Task as TaskEntity } from "../../domain/entities/Task";
 import { Priority } from "../../domain/entities/Task";
 import TaskModel from '../models/TaskSchema'
+import ColumnModel from "../models/ColumnSchema";
 import { ITaskDocument } from "../models/TaskSchema";
 import mongoose from "mongoose";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
+import { businessRules } from "../../constants/businessRules";
 
 export class TaskRepository implements ITaskRepository {
   async create(taskData: 
@@ -15,12 +17,55 @@ export class TaskRepository implements ITaskRepository {
         description?: string; 
         priority: Priority; 
         assignee_id?: string | null
-        order: number }): Promise<TaskEntity>{
-            const newTask = new TaskModel(taskData)
-            const savedTask = await newTask.save()
+     }): Promise<TaskEntity>{
+        const session = await mongoose.startSession();
+        session.startTransaction();
 
-            return this.mapToEntity(savedTask)
+        try {
+            // MUTEX LOCK: Lock the Column
+            const column = await ColumnModel.findByIdAndUpdate(
+                taskData.column_id,
+                { $set: { updated_at: new Date() } }
+            ).session(session);
+
+            if (!column) {
+                throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Column not found", 404);
+            }
+
+            // Count existing tasks
+            const currentCount = await TaskModel.countDocuments({ 
+                column_id: taskData.column_id 
+            }).session(session);
+
+            // Validate Business Rule: Max 20 Tasks
+            if (currentCount >= businessRules.MAX_TASKS_PER_COLUMN) {
+                throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, 'Cannot create more than 20 tasks per column', 400);
+            }
+
+            // Calculate new order
+            const newOrder = currentCount; // 0-based index
+
+            // Create the Task
+            const newTask = new TaskModel({
+                ...taskData,
+                order: newOrder
+            });
+
+            const savedTask = await newTask.save({ session });
+
+            // Commit the transaction
+            await session.commitTransaction();
+            
+            return this.mapToEntity(savedTask);
+
+        } catch (error) {
+            // Abort transaction on any error
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
         }
+    }
   
   async findByColumnId(columnId: string): Promise<TaskEntity[]> {
     const taskDocs = await TaskModel
@@ -128,7 +173,8 @@ export class TaskRepository implements ITaskRepository {
                 session.endSession()
                 return
             }
-    
+
+            // Implements "Shift" algorithm:
             if (newOrder > currentOrder) {
                 // Moving DOWN: Shift items between old and new positions UP (-1)
                 await TaskModel.updateMany(
@@ -151,6 +197,7 @@ export class TaskRepository implements ITaskRepository {
         } else {
             // SCENARIO B: Moving to a DIFFERENT column
             
+            // Implements "Shift" algorithm:
             // Make room in the TARGET column : Shift items >= newOrder DOWN(+1)
             await TaskModel.updateMany(
                 { column_id: targetColumnId, order: { $gte: newOrder } },
