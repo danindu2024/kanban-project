@@ -20,7 +20,8 @@ export const ErrorCodes = {
   
   // Validation errors
   VALIDATION_ERROR: 'VAL_001',
-  MISSING_INPUT: 'VAL_002',
+  MISSING_REQUIRED_FIELDS: 'VAL_002',
+  BUSINESS_RULE_VIOLATION: 'VAL_003',
   
   // Rate limiting
   RATE_LIMIT_EXCEEDED: 'RATE_001',

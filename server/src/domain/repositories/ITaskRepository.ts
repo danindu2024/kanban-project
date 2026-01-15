@@ -9,7 +9,7 @@ export interface ITaskRepository {
       description?: string; 
       priority: Priority; 
       assignee_id?: string | null;
-      order: number }): Promise<Task>;
+    }): Promise<Task>;
 
   findByColumnId(columnId: string): Promise<Task[]>;
   findByBoardId(boardId: string): Promise<Task[]>;

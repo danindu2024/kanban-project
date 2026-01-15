@@ -51,54 +51,64 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 
 #### D. Tasks Collection (`tasks`)
 
-| Field         | Type     | Description                       |
-| :------------ | :------- | :-------------------------------- |
-| `_id`         | ObjectId | Unique Identifier                 |
-| `column_id`   | ObjectId | Ref: Columns (Indexed)            |
-| `board_id`    | ObjectId | Ref: Boards (For faster querying) |
-| `title`       | String   | Task summary                      |
-| `description` | String   | Markdown supported                |
-| `priority`    | String   | ENUM: ['low', 'medium', 'high'] - Default: 'low'  |
-| `assignee_id` | ObjectId | Ref: Users (Nullable, Single assignee only)             |
-| `order`       | Number   | For drag-and-drop positioning     |
+| Field         | Type     | Description                                                             |
+| :------------ | :------- | :---------------------------------------------------------------------- |
+| `_id`         | ObjectId | Unique Identifier                                                       |
+| `column_id`   | ObjectId | Ref: Columns (Indexed)                                                  |
+| `board_id`    | ObjectId | Ref: Boards (For faster querying)                                       |
+| `title`       | String   | Task summary                                                            |
+| `description` | String   | Markdown supported                                                      |
+| `priority`    | String   | ENUM: ['low', 'medium', 'high'] - Default: 'low'                        |
+| `assignee_id` | ObjectId | Ref: Users (Nullable, Single assignee only)                             |
+| `order`       | Number   | For drag-and-drop positioning. Note: Managed via Mutex Transactio(0-20) |
 
 ### 2.2: Indexing Strategy
-* **users.email** - Unique index
-* **columns.board_id** - Standard index
-* **tasks.column_id** - Standard index
-* **tasks.board_id** - Standard index
-* No **compound indexes** in Sprint 1
+
+- **users.email** - Unique index
+- **columns.board_id** - Standard index
+- **tasks.column_id** - Standard index
+- **tasks.board_id** - Standard index
+- No **compound indexes** in Sprint 1
 
 ## 3. Validation & Security Rules
 
 ### 3.1 Email Validation
+
 **Regex Pattern:**
+
 ```regex
 ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
 ```
 
 **Requirements:**
+
 - Alphanumeric username with allowed special chars (`._%+-`)
 - Valid domain structure
 - Minimum 2-character TLD
 
 ### 3.2 Password Policy
+
 - **Minimum Length:** 8 characters
 - **Maximum Length:** 128 characters (prevents DoS via bcrypt)
 - **Complexity:** None (Sprint 1)
 - **Hashing:** Bcrypt with 10 salt rounds
 
 ### 3.3 Field Length Limits
-| Field | Max Length | Reason |
-|-------|------------|--------|
-| Name | 100 chars | Prevent database bloat |
-| Email | 255 chars | RFC 5321 standard |
-| Password | 50 chars | Bcrypt performance limit with buffer |
-| Board Title | 100 chars | Prevent UI overflow and database bloat |
-| Column Title | 50 chars | Prevent UI overflow and database bloat |
-| No of columns | 20 columns | Prevent UI overflow |
+
+| Field             | Max Length | Reason                                 |
+| ----------------- | ---------- | -------------------------------------- |
+| Name              | 100 chars  | Prevent database bloat                 |
+| Email             | 255 chars  | RFC 5321 standard                      |
+| Password          | 50 chars   | Bcrypt performance limit with buffer   |
+| Board Title       | 150 chars  | Prevent UI overflow and database bloat |
+| Column Title      | 150 chars  | Prevent UI overflow and database bloat |
+| Task Title        | 150 chars  | Prevent UI overflow and database bloat |
+| Task Description  | 1000 chars | Prevent UI overflow and database bloat |
+| columns per board | 20 columns | Prevent UI overflow                    |
+| tasks per column  | 50 tasks   | Prevent UI overflow                    |
 
 ### 3.4 JWT Configuration
+
 - **Algorithm:** HS256
 - **Expiration:** 7 days
 - **Secret Length:** Minimum 32 characters (enforced at startup)
@@ -106,40 +116,54 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
   - `TokenExpiredError` → AUTH_002
   - `JsonWebTokenError` → AUTH_003
 
-###  3.5 Board Validation Rules
+### 3.5 Board Validation Rules
 
-* **Title:** Required, maximum 100 characters
-* **Owner ID:** Derived from JWT, not validated (trusted server data)
-* **Members Array:** Initialized as empty array on creation
-* **ObjectId Validation:** Handled at infrastructure layer via CastError
+- **Title:** Required, maximum 100 characters
+- **Owner ID:** Derived from JWT, not validated (trusted server data)
+- **Members Array:** Initialized as empty array on creation
+- **ObjectId Validation:** Handled at infrastructure layer via CastError
 
 ### 3.6 Authorization Model for Boards
 
-* **Board Access:** Users can only retrieve boards where they are owner OR member
-* **Board Creation:** Any authenticated user can create boards (they become owner)
-* **Board Updates:** Only board owner or admin can update board metadata
-* **Member Management:** Only board owner or admin can add/remove members
-* **Board Deletion:** Only board owner or admin can delete
-* **Implementation:** Authorization enforced via use case layer checks
+- **Board Access:** Users can only retrieve boards where they are owner OR member
+- **Board Creation:** Any authenticated user can create boards (they become owner)
+- **Board Updates:** Only board owner or admin can update board metadata
+- **Member Management:** Only board owner or admin can add/remove members
+- **Board Deletion:** Only board owner or admin can delete
+- **Implementation:** Authorization enforced via use case layer checks
 
 ### 3.7 Member Management Rules
 
 #### Add Member:
 
-* User ID must exist in system (USER_001 if not)
-* User cannot already be a member (VAL_001 if duplicate)
-* Owner is automatically a member (implicit, not in array)
+- User ID must exist in system (USER_001 if not)
+- User cannot already be a member (VAL_001 if duplicate)
+- Owner is automatically a member (implicit, not in array)
 
 #### Remove Member:
 
-* User ID must be in members array (VAL_001 if not)
-* Cannot remove board owner (VAL_001)
-* Removing last member is allowed (owner remains)
+- User ID must be in members array (VAL_001 if not)
+- Cannot remove board owner (VAL_001)
+- Removing last member is allowed (owner remains)
 
 ### 3.8 Task Authorization Model
 
-* **Create Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
-* **Update Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
-* **Assignee Validation:** When updating `assignee_id`, the backend must verify the target user is a member of the board.
-* **Delete Task:** Restricted to Board Owner or Admin only.
-* **Move Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
+- **Create Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
+- **Update Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
+- **Assignee Validation:** When updating `assignee_id`, the backend must verify the target user is a member of the board.
+- **Delete Task:** Restricted to Board Owner or Admin only.
+- **Move Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
+
+### 3.9 Concurrency Strategy (Task Ordering)
+
+- **Problem:** Sequential ordering (1, 2, 3) requires atomic "Read-Count-Write" operations.
+- **Solution:** Pessimistic Locking (Mutex) via MongoDB Transactions.
+- **Implementation:**
+
+1. Start Transaction.
+2. Lock parent Column document (updated_at write).
+3. Count existing tasks.
+4. Insert new task with order = count.
+5. Commit.
+
+- **Constraints:** Hard limit of 20 tasks per column to minimize lock contention duration.

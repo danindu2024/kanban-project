@@ -17,7 +17,7 @@ const TaskSchema: Schema = new Schema({
   board_id: { type: Schema.Types.ObjectId, ref: 'Board', required: true },
   title: { type: String, required: true },
   description: { type: String },
-  priority: { type: String, enum: ['low', 'medium', 'high'], required: true },
+  priority: { type: String, enum: ['low', 'medium', 'high'], required: true, default: 'low' },
   assignee_id: { type: Schema.Types.ObjectId, ref: 'User' },
   order: { type: Number, required: true },
   created_at: { type: Date, default: Date.now }

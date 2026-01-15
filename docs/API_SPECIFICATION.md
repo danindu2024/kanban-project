@@ -430,6 +430,28 @@ POST `/tasks [Auth]`
 }
 ```
 
+* **Error (400 Bad Request - Limit Exceeded):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Cannot create more than 20 tasks per column"
+  }
+}
+```
+
+* **Error (400 Bad Request - Validation):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Assignee must be a member of the board" 
+  }
+}
+```
+
 ### 5.2 Move Task (Drag & Drop)
 PATCH `/tasks/:id/move [Auth]`
 
@@ -529,7 +551,7 @@ DELETE `/tasks/:id [Auth]`
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
 |VAL_002|MISSING_INPUT|Required fields are not provided|User hasn't provided required fields|
-|VAL_003|Business Rule Violation|Action rejected due to current resource state|Deleting a non-empty column|
+|VAL_003|Business Rule Violation|Request technically valid but violates logic constraints|Exceeding 20 tasks/column, Title > 150 chars|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
 |URL_001|URL Not Found|URL Not Fount|Undefined URL|
 |SERVER_001|INTERNAL ERROR|Internal Server doesn't work|server crashes|
