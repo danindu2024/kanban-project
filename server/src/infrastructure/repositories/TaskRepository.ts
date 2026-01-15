@@ -67,9 +67,8 @@ export class TaskRepository implements ITaskRepository {
             throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task nor found', 404)
         }
 
-        // Use-cases layer ensure task exists
-        const currentOrder = task!.order
-        const currentColumnId = task!.column_id.toString();
+        const currentOrder = task.order
+        const currentColumnId = task.column_id.toString();
 
         const result = await TaskModel.deleteOne({ _id: taskId }).session(session);
 
@@ -117,10 +116,9 @@ export class TaskRepository implements ITaskRepository {
             throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task nor found', 404)
         }
 
-        // Use-cases layer ensure task exists
-        const currentColumnId = task!.column_id.toString();
+        const currentColumnId = task.column_id.toString();
         const isSameColumn = currentColumnId === targetColumnId;
-        const currentOrder = task!.order
+        const currentOrder = task.order
 
         if (isSameColumn) {
             // SCENARIO A: Reordering within the SAME column
