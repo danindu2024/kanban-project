@@ -100,12 +100,10 @@ export class CreateTaskUseCase {
         }
 
         // Order automatically become the last task order in the column
-        // for MCV, current order is counted by fetching all the columns
-        const currentTasks = await this.taskRepository.findByColumnId(columnId)
-        const order = currentTasks.length
+        const order = await this.taskRepository.countTasks(columnId)
 
         // MAX no of tasks is 20 per column
-        if(order > 20)
+        if(order+1 > 20)
             throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Cannot create more than 20 tasks per column', 400)
 
         // Validate priority

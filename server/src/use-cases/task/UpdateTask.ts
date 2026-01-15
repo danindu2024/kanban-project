@@ -81,32 +81,33 @@ export class UpdateTaskUseCase {
         const priorityToUpdate = priority !== undefined ? priority : task.priority;
         // Description can be null/empty, so we check strictly against undefined
         const descriptionToUpdate = description !== undefined ? description : task.description;
+        const assigneeIdToUpdate = assigneeId !== undefined ? assigneeId : task.assignee_id;
 
         // title validation
-        if( title !== undefined ){
-            if( title.trim().length === 0 ){
+        if( titleToUpdate ){
+            if( titleToUpdate.trim().length === 0 ){
                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task title cannot be empty", 400);
             }
-            if( title.length > 50 ){
+            if( titleToUpdate.length > 50 ){
                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task title must not exceed 50 characters", 400);
             }
         }
 
         // description validation
-        if( description !== undefined && description.length > 500){
+        if( descriptionToUpdate && descriptionToUpdate.length > 500){
             throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task description must not exceed 500 characters", 400);
         }
  
         // priority validation
-        if( priority !== undefined ){
-            if( !['low', 'medium', 'high'].includes(priority) ){
+        if( priorityToUpdate ){
+            if( !['low', 'medium', 'high'].includes(priorityToUpdate) ){
                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Invalid priority value", 400);
             }
         }
 
-        if( assigneeId ){
-            const isBoardMember = board.members.some((member) =>member.toString() === assigneeId )
-            const isBoardOwner = board.owner_id.toString() === assigneeId;
+        if( assigneeIdToUpdate ){
+            const isBoardMember = board.members.some((member) =>member.toString() === assigneeIdToUpdate )
+            const isBoardOwner = board.owner_id.toString() === assigneeIdToUpdate;
             if(!isBoardMember && !isBoardOwner){
                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Assignee must be a board member", 400);
             }
@@ -117,7 +118,7 @@ export class UpdateTaskUseCase {
                 title: titleToUpdate, 
                 description: descriptionToUpdate, 
                 priority: priorityToUpdate, 
-                assignee_id:assigneeId 
+                assignee_id:assigneeIdToUpdate
             });
         
         if(!updatedTask){
