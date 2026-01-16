@@ -166,4 +166,12 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 4. Insert new task with order = count.
 5. Commit.
 
-- **Constraints:** Hard limit of 20 tasks per column to minimize lock contention duration.
+- **Failure Handling:**
+
+**Atomic Rollback:** If any step fails (e.g., lock timeout, write conflict), the entire transaction aborts. No task is created, and the column state remains unchanged (ACID compliance).
+
+**Retry Mechanism:** On transient errors (specifically `WriteConflict`), the system automatically retries the operation (up to 3 times) before giving up.
+
+**Exhaustion:** If retries fail due to high contention, the request is rejected with an error (`409 Conflict` or `500`), ensuring no duplicate orders or gaps are created.
+
+- **Constraints:** Hard limit of 50 tasks per column to minimize lock contention duration.
