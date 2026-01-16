@@ -37,9 +37,9 @@ export class TaskRepository implements ITaskRepository {
                 column_id: taskData.column_id 
             }).session(session);
 
-            // Validate Business Rule: Max 20 Tasks
+            // Validate max tasks per column
             if (currentCount >= businessRules.MAX_TASKS_PER_COLUMN) {
-                throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, 'Cannot create more than 20 tasks per column', 400);
+                throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Cannot create more than ${businessRules.MAX_TASKS_PER_COLUMN} tasks per column`, 400);
             }
 
             // Calculate new order
@@ -256,7 +256,8 @@ export class TaskRepository implements ITaskRepository {
           priority: doc.priority,
           assignee_id: doc.assignee_id ? doc.assignee_id.toString() : undefined,
           order: doc.order,
-          created_at: doc.created_at
+          created_at: doc.created_at,
+          updated_at: doc.updated_at
         }
     }
 }
