@@ -53,6 +53,7 @@
 * Users can only see/access boards they own or are members of
 * JWT middleware ensures `req.user.id` is authentic
 * No additional permission checks needed at use case layer
+* Task assignee is a board member
 
 #### Trade-offs:
 
