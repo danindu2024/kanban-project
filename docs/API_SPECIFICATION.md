@@ -436,18 +436,62 @@ POST `/tasks [Auth]`
   "success": false,
   "error": {
     "code": "VAL_003",
-    "message": "Cannot create more than 20 tasks per column"
+    "message": "Cannot create more than <MAX_TASKS_PER_COLUMN> tasks per column"
   }
 }
 ```
 
-* **Error (400 Bad Request - Validation):**
+* **Error (400 Bad Request - Assignee Violation):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Assignee must be a member or the owner of the board" 
+  }
+}
+```
+
+* **Error (404 Not Found - Column not found):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "COLUMN_001",
+    "message": "Column not exists or not in the specified board" 
+  }
+}
+```
+
+* **Error (400 Bad Request - empty/whitespace-only title):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Task title cannot be empty" 
+  }
+}
+```
+
+* **Error (400 Bad Request - title too long):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Task title must not exceed <MAX_TASK_TITLE_LENGTH> characters" 
+  }
+}
+```
+
+* **Error (400 Bad Request - Invalid priority):**
 ```json
 {
   "success": false,
   "error": {
     "code": "VAL_001",
-    "message": "Assignee must be a member of the board" 
+    "message": "Priority must be 'low', 'medium', or 'high'" 
   }
 }
 ```
