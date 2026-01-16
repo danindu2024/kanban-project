@@ -10,6 +10,7 @@ export interface ITaskDocument extends Document {
   assignee_id?: mongoose.Types.ObjectId | null;
   order: number;
   created_at: Date;
+  updated_at: Date;
 }
 
 const TaskSchema: Schema = new Schema({
@@ -17,10 +18,14 @@ const TaskSchema: Schema = new Schema({
   board_id: { type: Schema.Types.ObjectId, ref: 'Board', required: true },
   title: { type: String, required: true },
   description: { type: String },
-  priority: { type: String, enum: ['low', 'medium', 'high'], required: true, default: 'low' },
+  priority: { type: String, enum: ['low', 'medium', 'high'], required: true },
   assignee_id: { type: Schema.Types.ObjectId, ref: 'User' },
   order: { type: Number, required: true },
-  created_at: { type: Date, default: Date.now }
+}, {
+  timestamps: {
+    createdAt: 'created_at',  // Map to snake_case
+    updatedAt: 'updated_at'
+  }
 });
 
 TaskSchema.index({ column_id: 1 });
