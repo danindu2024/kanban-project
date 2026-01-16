@@ -2,7 +2,7 @@
 
 All notable changes to the FlowState project documentation and implementation.
 
-## [Sprint 1] - 2025-01-03
+## [Sprint 1] - 2025-01-16
 
 ### Security Enhancements
 - **Email Validation:** Upgraded regex to RFC-compliant pattern
@@ -40,6 +40,23 @@ All notable changes to the FlowState project documentation and implementation.
 ### Error Handling
 - **New Error Code:** AUTH_004 for unauthenticated user scenarios
 - **CastError Handling:** MongoDB CastErrors converted to 400 Bad Request responses
+
+### Task Management Implementation
+- **Task Creation:** Implemented POST /tasks endpoint with comprehensive validation
+- **Authorization:** Tasks can be created by board owner, admin, or board members only
+- **Assignee Validation:** Assignees must be board owner or members; validated before task creation
+- **Business Rules Enforcement:** 
+  - Maximum 50 tasks per column (enforced via transaction)
+  - Task title maximum 150 characters
+  - Task description maximum 1000 characters
+  - Priority defaults to 'low' if not provided
+  - Empty/whitespace-only titles rejected
+- **Concurrency Safety:** Task creation uses MongoDB transactions with pessimistic locking on parent Column
+- **Validation Flow:** Multi-step validation (required fields → user exists → board exists → authorization → column exists → assignee validity → field constraints)
+- **Error Handling:** 
+  - Specific error codes for column not found (COLUMN_001)
+  - Validation errors for empty titles, length violations, invalid priority
+  - Authorization errors for non-members attempting task creation
 
 ### Deferred to Sprint 2
 - GET /boards/:id (board details with columns and tasks)
