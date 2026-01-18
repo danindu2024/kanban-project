@@ -7,4 +7,5 @@ export interface Column {
   order: number;
   tasks?: Task[];
   created_at: Date;
+  updated_at: Date;
 }
