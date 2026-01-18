@@ -10,4 +10,5 @@ export interface Task {
   assignee_id?: string | null; // Single assignee as per MVP
   order: number;
   created_at: Date;
+  updated_at: Date;
 }
