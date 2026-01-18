@@ -594,7 +594,7 @@ DELETE `/tasks/:id [Auth]`
 |TASK_001|Task Not Found|Requested task doesn't exist|Invalid task ID|
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
-|VAL_002|MISSING_INPUT|Required fields are not provided|User hasn't provided required fields|
+|VAL_002|MISSING_REQUIRED_FIELDS|Required fields are not provided|User hasn't provided required fields|
 |VAL_003|Business Rule Violation|Request technically valid but violates logic constraints|Exceeding 20 tasks/column, Title > 150 chars|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
 |URL_001|URL Not Found|URL Not Fount|Undefined URL|
