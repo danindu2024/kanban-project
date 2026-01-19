@@ -86,7 +86,7 @@ export class CreateTaskUseCase {
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'You must be a member of this board to create tasks', 403)
         }
 
-        // 6. Validate Assignee
+        // Validate Assignee
         if(assigneeId) {
             // validate assignee exists
             const assignee = await this.userRepository.findById(assigneeId)
