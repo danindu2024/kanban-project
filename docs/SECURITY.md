@@ -118,7 +118,7 @@
 
 **Sprint 2 Plan:** Implement express-validator or DOMPurify
 
-### 8.3 Password Policy
+### 8.2 Password Policy
 **Current Requirements:**
 - Minimum 8 characters
 - Maximum 128 characters
@@ -129,18 +129,8 @@
 
 **Sprint 2 Plan:** Optional strength indicator (not enforced)
 
-### 8.4 MongoDB CastError Handling
-* **Status:** Implemented in Sprint 1
-* **Behavior:**
-
-* Invalid ObjectId formats (from user input) trigger MongoDB CastError
-* Global error handler converts CastError to 400 Bad Request
-* Server-generated IDs (e.g., JWT userId) that fail are treated as 500 Internal Error
-
-* **Examples:**
-
-* `GET /boards/invalid-id` → 400 Bad Request
-* Corrupted JWT with malformed userId → 500 Internal Server Error (indicates server bug)
+### delete user
+If board owner is deleted board become orphaned. Need to implement a strategy
 
 ### 9. Race Condition Handling
 
@@ -153,3 +143,20 @@
 * **Details:**
     * **Creating Columns:** The system locks the **Board** document before checking the "Max Columns" limit. This prevents race conditions where concurrent requests could bypass the limit of <MAX_TASKS_PER_COLUMN> columns.
     * **Creating Tasks:** The system locks the **Column** document before assigning an order number to a new task.
+
+### 10. cast error handling
+Gloabl Error handler throws 400 error
+* **Examples:**
+
+* `GET /boards/invalid-id` → 400 Bad Request
+
+* **Error (400 Bad Request - CastError)**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Invalide OID foramt"
+  }
+}
+```
