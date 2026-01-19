@@ -142,5 +142,14 @@
 * `GET /boards/invalid-id` → 400 Bad Request
 * Corrupted JWT with malformed userId → 500 Internal Server Error (indicates server bug)
 
-### 9 Race Condition in Registration
-* **security pattern** Solved using MongoDB ACID Transactions with Pessimistic Locking on the parent Column document
+### 9. Race Condition Handling
+
+#### 9.1 Registration
+* **Status:** Solved using MongoDB unique indexes on `email`.
+
+#### 9.2 Column & Task Ordering
+* **Status:** Implemented in Sprint 1.
+* **Strategy:** Pessimistic Locking via MongoDB Transactions.
+* **Details:**
+    * **Creating Columns:** The system locks the **Board** document before checking the "Max Columns" limit. This prevents race conditions where concurrent requests could bypass the limit of <MAX_TASKS_PER_COLUMN> columns.
+    * **Creating Tasks:** The system locks the **Column** document before assigning an order number to a new task.

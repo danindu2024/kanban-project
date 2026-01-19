@@ -344,11 +344,60 @@ DELETE `/boards/:id/members/:userId [Auth]`
 ### 4.1 Create Column
 POST `/columns [Auth]`
 
+* **Permission:** Only Board Owner or Admin.
 * **Body:**
 
 ```JSON
 
 { "board_id": "b1", "title": "In Progress" }
+```
+
+* **Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "c1",
+    "board_id": "b1",
+    "title": "In Progress",
+    "order": 3,
+    "tasks": [],
+    "created_at": "2025-01-18T10:00:00.000Z"
+  }
+}
+```
+
+* **Error (403 Forbidden - Access Denied):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Only admin or board owner can create column"
+  }
+}
+```
+
+* **Error (400 Bad Request - Limit Exceeded):**
+``` json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Can't create new column. Maximum limit(20) exceeded"
+  }
+}
+```
+
+* **Error (404 Not Found):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Requested board doesn't exist"
+  }
+}
 ```
 
 ### 4.2 Move Column (Drag & Drop)
@@ -594,7 +643,7 @@ DELETE `/tasks/:id [Auth]`
 |TASK_001|Task Not Found|Requested task doesn't exist|Invalid task ID|
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
-|VAL_002|MISSING_INPUT|Required fields are not provided|User hasn't provided required fields|
+|VAL_002|MISSING_REQUIRED_FIELDS|Required fields are not provided|User hasn't provided required fields|
 |VAL_003|Business Rule Violation|Request technically valid but violates logic constraints|Exceeding 20 tasks/column, Title > 150 chars|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
 |URL_001|URL Not Found|URL Not Fount|Undefined URL|

@@ -5,13 +5,18 @@ export interface IColumnDocument extends Document {
     title: string;
     order: number;
     created_at: Date;
+    updated_at: Date;
 }
 
 const ColumnSchema: Schema = new Schema({
     board_id: {type: Schema.Types.ObjectId, ref: "Board", required: true},
     title: {type: String, required: true},
     order: {type: Number, required: true},
-    created_at: {type: Date, default: Date.now}
+}, {
+    timestamps: { 
+        createdAt: 'created_at', // Map to snake_case names
+        updatedAt: 'updated_at' 
+    }
 })
 
 ColumnSchema.index({ board_id: 1 });

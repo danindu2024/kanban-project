@@ -1,21 +1,63 @@
 import { IColumnRepository } from '../../domain/repositories/IColumnRepository';
 import { Column as ColumnEntity} from '../../domain/entities/Column';
 import ColumnModel, { IColumnDocument } from '../models/ColumnSchema';
+import BoardModel from '../models/BoardSchema';
 import TaskModel from '../models/TaskSchema';
 import mongoose from 'mongoose';
 import { AppError } from '../../utils/AppError';
 import { ErrorCodes } from '../../constants/errorCodes';
+import { businessRules } from '../../constants/businessRules';
 
 export class ColumnRepository implements IColumnRepository {
 
     async create(columnData: 
-        { board_id: string; 
-          title: string; 
-          order: number;}): Promise<ColumnEntity>{
-        const newColumn = new ColumnModel(columnData);
-        const savedColumn = await newColumn.save();
+        { 
+            board_id: string; 
+            title: string; 
+        }
+    ) : Promise<ColumnEntity>{
+        
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-        return this.mapToEntity(savedColumn);
+        try{
+            // add Mutex lock for board to prevent race condition
+            const board = await BoardModel.findByIdAndUpdate(
+                columnData.board_id,
+                {$set: {updated_at: new Date()}}
+            ).session(session)
+
+            if(!board){
+                throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Board not found', 404)
+            }
+
+            // get the column count of the board
+            const columnCount = await ColumnModel.countDocuments(
+                {board_id: columnData.board_id}).session(session)
+
+            // Maximum column count per board is <MAX_COLUMNS_PER_BOARD>
+            if(columnCount >= businessRules.MAX_COLUMNS_PER_BOARD){
+                throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Can't create new column. Maximum limit(${businessRules.MAX_COLUMNS_PER_BOARD}) exceeded`)
+            }
+
+            // create column
+            const newColumn = new ColumnModel(
+                {
+                    ...columnData, 
+                    order: columnCount // current column count equal the new column order (0 based index)
+                }
+            )
+
+            const savedColumn = await newColumn.save({session})
+
+            await session.commitTransaction()
+            return this.mapToEntity(savedColumn)
+        }catch(error){
+            await session.abortTransaction()
+            throw error
+        }finally{
+            session.endSession()
+        }
     }
 
     async findByBoardId(boardId: string): Promise<ColumnEntity[]> {
@@ -143,6 +185,10 @@ export class ColumnRepository implements IColumnRepository {
       }
     }
 
+    async countColumn(boardId: string): Promise<number>{
+        return await ColumnModel.countDocuments({board_id: boardId})
+    }
+
     private mapToEntity(doc: IColumnDocument): ColumnEntity {
         return {
           id: doc._id.toString(),
@@ -151,7 +197,8 @@ export class ColumnRepository implements IColumnRepository {
           order: doc.order,
           // The tasks will be attached in the Use Case layer
           tasks: undefined,
-          created_at: doc.created_at
+          created_at: doc.created_at,
+          updated_at: doc.updated_at
         }
     }
 }
