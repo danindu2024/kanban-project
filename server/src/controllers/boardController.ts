@@ -8,6 +8,7 @@ import { RemoveMember } from "../use-cases/boards/RemoveMember";
 import { UpdateBoard } from "../use-cases/boards/UpdateBoard";
 import { IBoardRepository } from "../domain/repositories/IBoardRepository";
 import { IUserRepository } from "../domain/repositories/IUserRepository";
+import { ITaskRepository } from "../domain/repositories/ITaskRepository";
 
 export class BoardController {
   private createBoardUseCase: CreateBoard;
@@ -17,12 +18,12 @@ export class BoardController {
   private removeMemberUseCase: RemoveMember
   private updateBoardUseCase: UpdateBoard
 
-  constructor(boardRepository: IBoardRepository, userRepository: IUserRepository) {
+  constructor(boardRepository: IBoardRepository, userRepository: IUserRepository, taskRepository: ITaskRepository) {
     this.createBoardUseCase = new CreateBoard(boardRepository, userRepository);
     this.getUserBoardsUseCase = new GetUserBoards(boardRepository, userRepository);
     this.deleteBoardUseCase = new DeleteBoard(boardRepository, userRepository)
     this.addMembersUseCase = new AddMembers(boardRepository, userRepository)
-    this.removeMemberUseCase = new RemoveMember(boardRepository, userRepository)
+    this.removeMemberUseCase = new RemoveMember(boardRepository, userRepository, taskRepository)
     this.updateBoardUseCase = new UpdateBoard(boardRepository, userRepository)
   }
 

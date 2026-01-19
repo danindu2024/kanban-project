@@ -3,10 +3,13 @@ import { Board as BoardEntity } from "../../domain/entities/Board";
 import BoardModel, {IBoardDocument } from "../models/BoardSchema";
 
 export class BoardRepository implements IBoardRepository {
-  async create(boardData: { 
-    title: string;
-    owner_id: string;
-    members: string[]; }): Promise<BoardEntity> {
+  async create(boardData: 
+    { 
+      title: string;
+      owner_id: string;
+      members: string[];
+    }
+  ) : Promise<BoardEntity> {
     const newBoard = new BoardModel(boardData);
     const saved = await newBoard.save();
     return this.mapToEntity(saved);
@@ -73,7 +76,8 @@ export class BoardRepository implements IBoardRepository {
       title: doc.title,
       owner_id: doc.owner_id.toString(),
       members: doc.members.map((m) => m.toString()),
-      created_at: doc.created_at
+      created_at: doc.created_at,
+      updated_at: doc.updated_at
     }
   }
 }

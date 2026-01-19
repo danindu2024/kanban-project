@@ -167,7 +167,7 @@ POST `api/boards [Auth]`
 {
   "success": false,
   "error": {
-    "code": "VAL_001",
+    "code": "VAL_002",
     "message": "Title is required to create a board."
   }
 }
@@ -185,13 +185,13 @@ POST `api/boards [Auth]`
 }
 ```
 
-* **Error (401 Unauthorized):**
+* **Error (404 Not found):**
 ```json
 {
   "success": false,
   "error": {
-    "code": "AUTH_004",
-    "message": "User not authenticated"
+    "code": "USER_001",
+    "message": "User not found"
   }
 }
 ```
