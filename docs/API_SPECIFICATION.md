@@ -344,11 +344,60 @@ DELETE `/boards/:id/members/:userId [Auth]`
 ### 4.1 Create Column
 POST `/columns [Auth]`
 
+* **Permission:** Only Board Owner or Admin.
 * **Body:**
 
 ```JSON
 
 { "board_id": "b1", "title": "In Progress" }
+```
+
+* **Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "c1",
+    "board_id": "b1",
+    "title": "In Progress",
+    "order": 3,
+    "tasks": [],
+    "created_at": "2025-01-18T10:00:00.000Z"
+  }
+}
+```
+
+* **Error (403 Forbidden - Access Denied):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Only admin or board owner can create column"
+  }
+}
+```
+
+* **Error (400 Bad Request - Limit Exceeded):**
+``` json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Can't create new column. Maximum limit(20) exceeded"
+  }
+}
+```
+
+* **Error (404 Not Found):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Requested board doesn't exist"
+  }
+}
 ```
 
 ### 4.2 Move Column (Drag & Drop)
