@@ -103,12 +103,15 @@ export class CreateTaskUseCase {
             }
         }
 
+        // sanitize tite
+        const sanitizedTitle = title.trim()
+
         // Validate title
         // remove white space and check for empty title
-        if (title.trim().length === 0) {
+        if (sanitizedTitle.length === 0) {
             throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, "Task title cannot be empty", 400);
         }
-        if (title.length > businessRules.MAX_TASK_TITLE_LENGTH) {
+        if (sanitizedTitle.length > businessRules.MAX_TASK_TITLE_LENGTH) {
             throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Task title must not exceed ${businessRules.MAX_TASK_TITLE_LENGTH} characters`, 400);
         }
 
@@ -128,7 +131,7 @@ export class CreateTaskUseCase {
         const task = await this.taskRepository.create({ 
             column_id: columnId, 
             board_id: boardId, 
-            title, 
+            title: sanitizedTitle, 
             description: sanitizedDescription, 
             priority: finalPriority, 
             assignee_id: assigneeId
