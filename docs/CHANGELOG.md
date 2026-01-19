@@ -2,7 +2,7 @@
 
 All notable changes to the FlowState project documentation and implementation.
 
-## [Sprint 1] - 2025-01-16
+## [Sprint 1] - 2025-01-19
 
 ### Security Enhancements
 - **Email Validation:** Upgraded regex to RFC-compliant pattern
@@ -57,6 +57,15 @@ All notable changes to the FlowState project documentation and implementation.
   - Specific error codes for column not found (COLUMN_001)
   - Validation errors for empty titles, length violations, invalid priority
   - Authorization errors for non-members attempting task creation
+
+### Column Management Implementation
+- **Column Creation:** Implemented POST /columns endpoint with title validation
+- **Authorization:** Only board owner or admin can create columns
+- **Business Rules Enforcement:**
+  - Maximum 20 columns per board (enforced via transaction)
+  - Column title maximum 150 characters
+  - Empty/whitespace-only titles rejected
+- **Order Generation:** Auto-assigned as count of existing columns (0-indexed)
 
 ### Deferred to Sprint 2
 - GET /boards/:id (board details with columns and tasks)
