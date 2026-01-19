@@ -160,11 +160,27 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - **Solution:** Pessimistic Locking (Mutex) via MongoDB Transactions.
 - **Implementation:**
 
-1. Start Transaction.
-2. Lock parent Column document (updated_at write).
-3. Count existing tasks.
-4. Insert new task with order = count.
-5. Commit.
+#### A. Task Ordering (Pessimistic Locking)
+* **Context:** Sequential ordering (1, 2, 3) requires atomic "Read-Count-Write" operations.Enforcing the "Max 50 taskss" limit requires preventing concurrent writes that might exceed the limit (e.g., two users creating the 20th column simultaneously).
+* **Solution:** Lock parent **Column** document.
+* **Implementation:**
+  1. Start Transaction.
+  2. Lock Column (update `updated_at`).
+  3. Count existing  tasks
+  4. If count >= <MAX_TASKS_PER_COLUMN>, Abort Transaction (Business Rule Violation)
+  5. Else, Create task with `order = count`.
+  6. Commit.
+
+#### B. Column Creation & Limits (Board Locking)
+* **Context:** Enforcing the "Max 20 Columns" limit requires preventing concurrent writes that might exceed the limit (e.g., two users creating the 20th column simultaneously).
+* **Solution:** Lock parent **Board** document.
+* **Implementation:**
+  1. Start Transaction.
+  2. Lock Board (update `updated_at`) via `BoardModel.findByIdAndUpdate`.
+  3. Count existing columns.
+  4. If count >= <MAX_COLUMNS_PER_BOARD>, Abort Transaction (Business Rule Violation).
+  5. Else, Create Column with `order = count`.
+  6. Commit.
 
 - **Failure Handling:**
 
