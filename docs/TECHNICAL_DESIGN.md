@@ -118,8 +118,8 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 
 ### 3.5 Board Validation Rules
 
-- **Title:** Required, maximum 100 characters
-- **Owner ID:** Derived from JWT, not validated (trusted server data)
+- **Title:** Required, maximum 150 characters. Leading/trailing whitespace is trimmed
+- **Owner ID:** Derived from JWT and validated against the User collection to ensure existence
 - **Members Array:** Initialized as empty array on creation
 - **ObjectId Validation:** Handled at infrastructure layer via CastError
 
