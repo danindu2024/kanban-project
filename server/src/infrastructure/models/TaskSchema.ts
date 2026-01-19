@@ -16,8 +16,8 @@ export interface ITaskDocument extends Document {
 const TaskSchema: Schema = new Schema({
   column_id: { type: Schema.Types.ObjectId, ref: 'Column', required: true },
   board_id: { type: Schema.Types.ObjectId, ref: 'Board', required: true },
-  title: { type: String, required: true },
-  description: { type: String },
+  title: { type: String, required: true, trim: true },
+  description: { type: String, trim: true },
   priority: { type: String, enum: ['low', 'medium', 'high'], required: true },
   assignee_id: { type: Schema.Types.ObjectId, ref: 'User' },
   order: { type: Number, required: true },
