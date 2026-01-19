@@ -18,6 +18,7 @@ interface CreateColumnResponseDTO {
     order: number;
     tasks: never[]; // Explicitly typed as an empty array for new columns
     created_at: Date;
+    // updated_at is not passed as this is a newly created object
 }
 
 export class CreateColumnUseCase {
