@@ -19,9 +19,11 @@ export class TaskRepository implements ITaskRepository {
         assignee_id?: string | null
      }): Promise<TaskEntity>{
         const session = await mongoose.startSession();
-        session.startTransaction();
 
         try {
+            // start transaction
+            session.startTransaction()
+            
             // MUTEX LOCK: Lock the Column
             const column = await ColumnModel.findByIdAndUpdate(
                 taskData.column_id,
