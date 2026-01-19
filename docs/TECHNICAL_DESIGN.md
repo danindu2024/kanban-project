@@ -95,17 +95,17 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 
 ### 3.3 Field Length Limits
 
-| Field             | Max Length | Reason                                 |
-| ----------------- | ---------- | -------------------------------------- |
-| Name              | 100 chars  | Prevent database bloat                 |
-| Email             | 255 chars  | RFC 5321 standard                      |
-| Password          | 50 chars   | Bcrypt performance limit with buffer   |
-| Board Title       | 150 chars  | Prevent UI overflow and database bloat |
-| Column Title      | 150 chars  | Prevent UI overflow and database bloat |
-| Task Title        | 150 chars  | Prevent UI overflow and database bloat |
-| Task Description  | 1000 chars | Prevent UI overflow and database bloat |
-| columns per board | 20 columns | Prevent UI overflow                    |
-| tasks per column  | 50 tasks   | Prevent UI overflow                    |
+| Field             | Max Length | Min Length | Reason                                 |
+| ----------------- | ---------- | ---------- |-------------------------------------- |
+| Name              | 100 chars  | 1 char | Prevent database bloat                 |
+| Email             | 255 chars  | 6 chars (approx) | RFC 5321 standard, validated via Regex |
+| Password          | 50 chars   | 8 chars | Bcrypt performance limit with buffer   |
+| Board Title       | 150 chars  | 1 char (non-whitespace) | Prevent UI overflow and database bloat |
+| Column Title      | 150 chars  | 1 char (non-whitespace) | Prevent UI overflow and database bloat |
+| Task Title        | 150 chars  | 1 char (non-whitespace) | Prevent UI overflow and database bloat |
+| Task Description  | 1000 chars | 0 chars (Optional) | Prevent UI overflow and database bloat |
+| columns per board | 20 columns | 0 columns | Prevent UI overflow                    |
+| tasks per column  | 50 tasks   | 0 tasks | Prevent UI overflow                    |
 
 ### 3.4 JWT Configuration
 
@@ -123,7 +123,25 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - **Members Array:** Initialized as empty array on creation
 - **ObjectId Validation:** Handled at infrastructure layer via CastError
 
-### 3.6 Authorization Model for Boards
+### 3.6 Column Validation Rules
+
+* **Authorization:**
+   * **Actor:** Only users with role: 'admin' OR the owner_id of the parent board can create columns.
+   * **Enforcement:** Use Case layer check before database interaction.
+
+* **Title Constraints:**
+   * **Required:** Yes.
+   * **Content:** Must contain at least one non-whitespace character. Validated via title.trim().length > 0.
+   * **Max Length:** 150 characters (defined in businessRules).
+   * **Whitespace:** Leading/trailing whitespace is ignored during validation checks and Schema trimming is enabled.
+
+* **Board Constraints:**
+   * **Existence:** Board ID must refer to a valid, existing board (checked via BoardRepository).
+   * **Limit Enforcement:** Maximum 20 columns per board.
+   * **Implementation:** Checked transactionally in ColumnRepository after acquiring a lock on the Board document.
+   * **Concurrency:** Uses a "Count-then-Write" strategy guarded by a parent Board lock to prevent race conditions exceeding the limit.
+
+### 3.7 Authorization Model for Boards
 
 - **Board Access:** Users can only retrieve boards where they are owner OR member
 - **Board Creation:** Any authenticated user can create boards (they become owner)
@@ -132,7 +150,7 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - **Board Deletion:** Only board owner or admin can delete
 - **Implementation:** Authorization enforced via use case layer checks
 
-### 3.7 Member Management Rules
+### 3.8 Member Management Rules
 
 #### Add Member:
 
@@ -146,7 +164,7 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - Cannot remove board owner (VAL_001)
 - Removing last member is allowed (owner remains)
 
-### 3.8 Task Authorization Model
+### 3.9 Task Authorization Model
 
 - **Create Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
 - **Update Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
@@ -154,7 +172,7 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - **Delete Task:** Restricted to Board Owner or Admin only.
 - **Move Task:** Allowed for Board Owner, Admin, and any user in the board's `members` array.
 
-### 3.9 Concurrency Strategy (Task Ordering)
+### 3.10 Concurrency Strategy (Task Ordering)
 
 - **Problem:** Sequential ordering (1, 2, 3) requires atomic "Read-Count-Write" operations.
 - **Solution:** Pessimistic Locking (Mutex) via MongoDB Transactions.
@@ -186,8 +204,43 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 
 **Atomic Rollback:** If any step fails (e.g., lock timeout, write conflict), the entire transaction aborts. No task is created, and the column state remains unchanged (ACID compliance).
 
-**Retry Mechanism:** On transient errors (specifically `WriteConflict`), the system automatically retries the operation (up to 3 times) before giving up.
+**Retry Mechanism (MVP):** For Sprint 1, the system does not automatically retry transactions on `WriteConflict`. Errors are propagated to the client, requiring the user to manually retry the operation.
 
-**Exhaustion:** If retries fail due to high contention, the request is rejected with an error (`409 Conflict` or `500`), ensuring no duplicate orders or gaps are created.
+**Exhaustion:** N/A for Sprint 1.
 
 - **Constraints:** Hard limit of 50 tasks per column to minimize lock contention duration.
+
+### 3.11 Task Validation Rules
+* **Authorization:**
+   * **Creator:** Must be an Admin, the Board Owner, or a listed Board Member.
+   * **Enforcement:** Use Case layer check before processing. Returns `403 Forbidden` if unauthorized.
+
+* **Assignee Constraints:**
+   * **Validity:** If provided, the Assignee ID must correspond to a valid user.
+   * **Membership:** The Assignee must be the Board Owner or a Board Member. You cannot assign a task to a user who is not part of the board.
+
+* **Field Constraints:**
+   * **Title:** Required. Must contain at least 1 non-whitespace character. Max 150 characters.
+   * **Description:** Optional. If provided, leading/trailing whitespace is trimmed. Max 1000 characters.
+   * **Priority:** Defaults to `'low'`. Must be one of `['low', 'medium', 'high']`.
+
+* **Column & Board Consistency:**
+   * **Linkage:** The target Column must explicitly belong to the target Board (column.board_id === boardId).
+
+* **Limit Enforcement:**
+   * **Constraint:** Maximum 50 tasks per column.
+   * **Implementation:** Enforced via MongoDB Transaction with Pessimistic Locking.
+   * **Mechanism:** The system locks the parent Column document (via findByIdAndUpdate) before counting existing tasks to prevent concurrent inserts from exceeding the limit.
+
+### 3.12 Order Generation Logic
+The system enforces sequential ordering (0-based index) for both Columns and Tasks to support consistent UI rendering and drag-and-drop operations.
+
+* **Column Ordering:**
+   * **Logic:** New Order = Count of Existing Columns
+   * **Mechanism:** Inside the creation transaction, the system counts existing columns for the target board (countDocuments). This count becomes the order index for the new column.
+   * **Concurrency Safety:** Relies on the Board Lock (acquired via BoardModel.findByIdAndUpdate) to ensure the count is accurate and stable before writing the new column.
+
+* **Task Ordering:**
+   * **Logic:** New Order = Count of Existing Tasks in Column
+   * **Mechanism:** Inside the creation transaction, the system counts existing tasks for the target column (countDocuments). This count becomes the order index for the new task.
+   * **Concurrency Safety:** Relies on the Column Lock (acquired via ColumnModel.findByIdAndUpdate) to ensure no other tasks are inserted simultaneously, preventing duplicate order indices.

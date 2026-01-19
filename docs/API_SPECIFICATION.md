@@ -34,7 +34,7 @@ Endpoints marked with `[Auth]` require JWT in Authorization header: `Authorizati
 
 ## 2. Authentication
 ### 2.1 Register User
-POST `/auth/register`
+POST `api/auth/register`
 
 * **Description:** Creates a new user account.
 
@@ -57,7 +57,7 @@ POST `/auth/register`
 }
 ```
 ### 2.2 Login
-POST `/auth/login`
+POST `api/auth/login`
 * **Body:**
 ```json
 { "email": "user@example.com", "password": "securePassword123" }
@@ -65,7 +65,7 @@ POST `/auth/login`
 
 * **Response (200 OK):** returns same structure as Register
 ### 2.3 Get Current User
-GET `/auth/me [Auth]`
+GET `api/auth/me [Auth]`
 
 * **Description:** Validates token and returns current user data.
 
@@ -106,7 +106,7 @@ GET `/auth/me [Auth]`
 
 ## 3 Boards
 ### 3.1 Get All Boards
-GET `/boards [Auth]`
+GET `api/boards [Auth]`
 
 * **Description:** Returns boards where the user is an owner or member.
 
@@ -145,7 +145,7 @@ GET `/boards [Auth]`
 ```
 
 ### 3.2 Create Board
-POST `/boards [Auth]`
+POST `api/boards [Auth]`
 
 * **Body:** `{ "title": "New Board" }`
 
@@ -197,7 +197,7 @@ POST `/boards [Auth]`
 ```
 
 ### 3.3 Get Board Details (with Columns & Tasks)
-GET `/boards/:id [Auth]`
+GET `api/boards/:id [Auth]`
 
 * **Description:** Fetches the board, including all its columns and tasks (populated).
 
@@ -222,10 +222,10 @@ GET `/boards/:id [Auth]`
 ```
 
 ### 3.4 Delete Board
-DELETE `/boards/:id [Auth]`
+DELETE `api/boards/:id [Auth]`
 
 ### 3.5 Update Board
-PATCH `/boards/:id [Auth]`
+PATCH `api/boards/:id [Auth]`
 
 * **Permission:** Only Board Owner or Admin
 * **Body:** `{ "title": "Updated Title" }`
@@ -255,7 +255,7 @@ PATCH `/boards/:id [Auth]`
 ```
 
 ### 3.6 Add Member to Board
-POST `/boards/:id/members [Auth]`
+POST `api/boards/:id/members [Auth]`
 
 * **Permission:** Only Board Owner or Admin
 * **Body:** `{ "members": ["u3", "u4"] }`
@@ -298,7 +298,7 @@ POST `/boards/:id/members [Auth]`
 ```
 
 ### 3.7 Remove Member from Board
-DELETE `/boards/:id/members/:userId [Auth]`
+DELETE `api/boards/:id/members/:userId [Auth]`
 
 * **Permission:** Only Board Owner or Admin
 * **Response (200 OK):**
@@ -342,7 +342,7 @@ DELETE `/boards/:id/members/:userId [Auth]`
 
 ## 4. Columns
 ### 4.1 Create Column
-POST `/columns [Auth]`
+POST `api/columns [Auth]`
 
 * **Permission:** Only Board Owner or Admin.
 * **Body:**
@@ -384,7 +384,7 @@ POST `/columns [Auth]`
   "success": false,
   "error": {
     "code": "VAL_003",
-    "message": "Can't create new column. Maximum limit(20) exceeded"
+    "message": "Can't create new column. Maximum limit(<MAX_COLUMNS_PER_BOARD>) exceeded"
   }
 }
 ```
@@ -400,8 +400,41 @@ POST `/columns [Auth]`
 }
 ```
 
+* **Error (400 Bad Request - Empty/Whitespace Title):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Column title cannot be empty"
+  }
+}
+```
+
+* **Error (400 Bad Request - Title Too Long)**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Column title must not exceed <MAX_COLUMN_TITLE_LENGTH> characters"
+  }
+}
+```
+
+* **Error (400 Bad Request - CastError)**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Invalide OID foramt"
+  }
+}
+```
+
 ### 4.2 Move Column (Drag & Drop)
-PATCH `/columns/:id/order [Auth]`
+PATCH `api/columns/:id/order [Auth]`
 
 * **Body:** `{ "new_order_index": 2 }`
 
@@ -413,7 +446,7 @@ PATCH `/columns/:id/order [Auth]`
 ```
 
 ### 4.3 Update column Details
-PATCH `/columns/:id [Auth]`
+PATCH `api/columns/:id [Auth]`
 
 * **Body:** `{ "title": "New Title" }`
 
@@ -423,7 +456,7 @@ PATCH `/columns/:id [Auth]`
 ```
 
 ### 4.4 Delete Column
-DELETE `/columns/:id [Auth]`
+DELETE `api/columns/:id [Auth]`
 
 * **Description:** Deletes a column.
 * **Constraint:** Column must be empty (no tasks).
@@ -452,7 +485,7 @@ DELETE `/columns/:id [Auth]`
 
 ## 5. Tasks
 ### 5.1 Create Task
-POST `/tasks [Auth]`
+POST `api/tasks [Auth]`
 
 * **Permission:** User must be Board Owner OR Member.
 
@@ -545,8 +578,19 @@ POST `/tasks [Auth]`
 }
 ```
 
+* **Error (400 Bad Request - CastError)**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Invalide OID foramt"
+  }
+}
+```
+
 ### 5.2 Move Task (Drag & Drop)
-PATCH `/tasks/:id/move [Auth]`
+PATCH `api/tasks/:id/move [Auth]`
 
 * **Description:** Critical endpoint. Handles moving a task within the same column OR to a different column.
 
@@ -561,7 +605,7 @@ PATCH `/tasks/:id/move [Auth]`
 ```
 
 ### 5.3 Update Task Details
-PATCH `/tasks/:id [Auth]`
+PATCH `api/tasks/:id [Auth]`
 
 * **Permission:** Board Owner, Admin, or Member.
 * **Description:** Updates any subset of task fields. Used for renaming, changing description, re-prioritizing, or assigning users.
@@ -589,7 +633,7 @@ PATCH `/tasks/:id [Auth]`
 ```
 
 ### 5.4 Delete Task
-DELETE `/tasks/:id [Auth]`
+DELETE `api/tasks/:id [Auth]`
 * **Permission:** RESTRICTED. Only Board Owner or Admin can delete tasks.
 * **Response (200 OK):**
 ```json

@@ -18,9 +18,11 @@ export class ColumnRepository implements IColumnRepository {
     ) : Promise<ColumnEntity>{
         
         const session = await mongoose.startSession()
-        session.startTransaction()
 
         try{
+            // start transaction
+            session.startTransaction()
+            
             // add Mutex lock for board to prevent race condition
             const board = await BoardModel.findByIdAndUpdate(
                 columnData.board_id,

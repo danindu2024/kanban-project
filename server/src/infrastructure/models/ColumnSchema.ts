@@ -10,7 +10,7 @@ export interface IColumnDocument extends Document {
 
 const ColumnSchema: Schema = new Schema({
     board_id: {type: Schema.Types.ObjectId, ref: "Board", required: true},
-    title: {type: String, required: true},
+    title: {type: String, required: true, trim: true},
     order: {type: Number, required: true},
 }, {
     timestamps: { 

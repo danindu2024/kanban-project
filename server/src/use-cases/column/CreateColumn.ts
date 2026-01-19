@@ -18,6 +18,7 @@ interface CreateColumnResponseDTO {
     order: number;
     tasks: never[]; // Explicitly typed as an empty array for new columns
     created_at: Date;
+    // updated_at is not passed as this is a newly created object
 }
 
 export class CreateColumnUseCase {
@@ -66,18 +67,21 @@ export class CreateColumnUseCase {
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can create column', 403)
         }
 
+        // sanitize title
+        const sanitizedTitle = title.trim()
+
         // title validation
-        if (title.trim().length === 0) {
+        if (sanitizedTitle.length === 0) {
             throw new AppError(ErrorCodes.VALIDATION_ERROR, "Column title cannot be empty", 400);
         }
-        if(title.length > businessRules.MAX_COLUMN_TITLE_LENGTH){
+        if(sanitizedTitle.length > businessRules.MAX_COLUMN_TITLE_LENGTH){
             throw new AppError(ErrorCodes.VALIDATION_ERROR, `Column title must not exceed ${businessRules.MAX_COLUMN_TITLE_LENGTH} characters`, 400);
         }
 
         // Repository handles column order generation
         const newColumn = await this.columnRepository.create({
             board_id: boardId,
-            title,
+            title: sanitizedTitle,
         });
 
         return {
