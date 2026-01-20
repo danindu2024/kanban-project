@@ -1,6 +1,9 @@
 import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
 import { Board as BoardEntity } from "../../domain/entities/Board";
 import BoardModel, {IBoardDocument } from "../models/BoardSchema";
+import { businessRules } from "../../constants/businessRules";
+import { AppError } from "../../utils/AppError";
+import { ErrorCodes } from "../../constants/errorCodes";
 
 export class BoardRepository implements IBoardRepository {
   async create(boardData: 
@@ -10,6 +13,13 @@ export class BoardRepository implements IBoardRepository {
       members: string[];
     }
   ) : Promise<BoardEntity> {
+
+    // User can only create maximum <MAX_BOARDS_PER_USER>
+    const boardCount = await BoardModel.countDocuments({owner_id: boardData.owner_id})
+    if(boardCount >= businessRules.MAX_BOARDS_PER_USER){
+      throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Can't create new board. Maximum limit(${businessRules.MAX_BOARDS_PER_USER}) exceeded`)
+    }
+
     const newBoard = new BoardModel(boardData);
     const saved = await newBoard.save();
     return this.mapToEntity(saved);
@@ -25,7 +35,7 @@ export class BoardRepository implements IBoardRepository {
 
   async findById(id: string): Promise<BoardEntity | null> {
     
-    const doc = await BoardModel.findById({_id: id});
+    const doc = await BoardModel.findById(id);
     if (!doc) return null;
     return this.mapToEntity(doc);
   }
