@@ -68,6 +68,16 @@
 * TypeScript strict mode enabled
 * No any types allowed (use unknown instead)
 
+### 4.3 Error Handling Standards
+
+* **Repositories:**
+    * **Do NOT use try/catch blocks.** Let Mongoose errors (Validation, Duplicate Key, Timeout) bubble up automatically.
+    * *Reason:* The Global Error Handler is configured to transform these specific DB errors into user-friendly HTTP responses.
+    
+* **Use Cases:**
+    * Throw `AppError` for business logic violations (e.g., "Limit Exceeded").
+    * Do not catch DB errors unless you need to transform a specific error (e.g., unique constraint violation) into a domain-specific message.
+
 ## 5. Seed Data Script
 Purpose and what it creates:
 
