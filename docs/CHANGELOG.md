@@ -67,6 +67,30 @@ All notable changes to the FlowState project documentation and implementation.
   - Empty/whitespace-only titles rejected
 - **Order Generation:** Auto-assigned as count of existing columns (0-indexed)
 
+### Board Management Implementation
+- **Board Creation:** Implemented POST /boards endpoint with title validation
+- **Board Limits:** Enforced maximum of 15 boards per user to protect free-tier resources
+- **Concurrency Strategy:** implemented "Check-then-Act" pattern for board limits (accepted race condition risk for MVP)
+- **Board Retrieval:** Implemented GET /boards endpoint (returns boards where user is owner/member)
+- **Authorization:** Boards automatically filtered by ownership/membership via repository query
+- **Response Fields:** All board responses include `created_at`, `members`, and `owner_id`
+
+### Database & Schema
+- **Indexing:** Added index to `boards.owner_id` to optimize `countDocuments` checks and user-specific queries
+- **Schema Refinement:** Enforced explicit empty array initialization for `members` on board creation
+
+### Documentation Updates
+- **Permissions (PRD/Security):** Updated requirements to allow *any* authenticated user to create boards (previously restricted to Admin/Owner)
+- **Infrastructure:** Updated `INFRASTRUCTURE.md` to strictly require `FRONTEND_URL` in production for CORS
+- **Technical Design:** - Documented "Repository Error Bubbling" strategy (no try/catch in repositories)
+    - Added Board Quantity Limits to constraints table
+    - Updated Indexing Strategy to include `boards.owner_id`
+- **Security:** Updated RBAC matrix to reflect that standard Members can create boards
+
+### Architecture Decisions
+- **Error Handling Strategy:** Established pattern where Repositories allow DB errors to bubble up; logic errors handled in Use Cases; system errors handled by Global Error Handler.
+- **Limit Enforcement:** Decided against ACID transactions for Board Limits (unlike Columns/Tasks) due to low impact of failure.
+
 ### Deferred to Sprint 2
 - GET /boards/:id (board details with columns and tasks)
 - DELETE /boards/:id (board deletion)
