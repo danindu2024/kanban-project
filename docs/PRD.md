@@ -49,9 +49,10 @@ To build "FlowState": a streamlined, professional-grade Kanban board tailored fo
 * **FR-03:** System shall enforce Role-Based Access Control (Admin vs. Member).
 
 #### B. Board Management
-* **FR-04:** Admins/Owners shall be able to Create, Read, Update, and Delete (CRUD) boards.
-* **FR-04.1:** Admins/Owners shall be able to add members to boards.
-* **FR-04.2:** Admins/Owners shall be able to remove members from boards.
+* **FR-04:** Any Authenticated User shall be able to Create boards.
+* **FR-04.1:** Admins and the Board Owner shall be able to Update and Delete their specific boards
+* **FR-04.2:** Admins/Owners shall be able to add/remove members
+* **FR-04.3:** The system shall limit each user to owning a maximum of 15 boards to ensure fair resource usage
 * **FR-05:** Members shall only be able to View boards they are assigned to.
 
 #### C. Column & Task Management
