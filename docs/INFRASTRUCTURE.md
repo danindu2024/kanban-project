@@ -21,13 +21,14 @@
 * No `.env` files in repository
 
 ## 3. Required Environment Variables
-List for both environments:
+These variables must be defined in your deployment platform (Render/Vercel) for the application to start.
 
-* `MONGODB_URI`
+* `MONGODB_URI` - Connection string for MongoDB Atlas
 * `JWT_SECRET` - Minimum 32 characters required (enforced at startup)
-* `NODE_ENV`
-* `FRONTEND_URL (for CORS)`
-* `PORT`
+* `NODE_ENV` - Set to `production` in the live environment
+* `PORT` - (Optional) Port number, defaults to platform assignment
+* `FRONTEND_URL` - **Required in Production.** The exact URL of your deployed frontend (e.g., `https://your-app.vercel.app`).
+    * *Reason:* Used to configure CORS. If missing or incorrect, the frontend will receive "Network Error" or "CORS Policy" blocks.
 
 ## 4. Logging Strategy
 
