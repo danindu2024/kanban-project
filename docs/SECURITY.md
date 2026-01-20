@@ -28,7 +28,7 @@
 ## 2 RBAC Matrix (Permissions)
 | Action | Admin | Board Owner | Member | Public |
 | :--- | :---: | :---: | :---: | :---: |
-| **Create Board** | ✅ | ✅ | ❌ | ❌ |
+| **Create Board** | ✅ | ✅ | ✅ | ❌ |
 | **Delete Board** | ✅ | ✅ | ❌ | ❌ |
 | **Add Members** | ✅ | ✅ | ❌ | ❌ |
 | **Remove Members** | ✅ | ✅ | ❌ | ❌ |
