@@ -11,6 +11,11 @@ The backend follows **Clean Architecture** principles to ensure decoupling betwe
 
 `Request` -> `Controller` -> `Use Case` -> `Repository Interface` -> `Mongoose Implementation` -> `MongoDB`
 
+### 1.2 Error Handling Strategy
+* **Repository Layer:** Does **not** catch database errors (e.g., connection failures, validation errors). All exceptions bubble up.
+* **Use Case Layer:** Catches specific functional errors (e.g., "Board not found" logic) but allows unexpected system errors to bubble up.
+* **Global Error Handler:** The final safety net (Express Middleware). It intercepts all unhandled errors, categorizes them (e.g., converting Mongoose `CastError` to `400 Bad Request`), and formats the response according to the API Specification.
+
 ---
 
 ## 2. Database Design (Schema)
@@ -36,7 +41,7 @@ We will use **MongoDB**. Since this is a Kanban board, read performance is criti
 | :--------- | :-------------- | :------------------------ |
 | `_id`      | ObjectId        | Unique Identifier         |
 | `title`    | String          | Board Name                |
-| `owner_id` | ObjectId        | Ref: Users                |
+| `owner_id` | ObjectId        | Ref: Users (indexed)      |
 | `members`  | Array<ObjectId> | Ref: Users (Team members) |
 
 #### C. Columns Collection (`columns`)
@@ -66,6 +71,7 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 
 - **users.email** - Unique index
 - **columns.board_id** - Standard index
+- **boards.owner_id** - Standard index
 - **tasks.column_id** - Standard index
 - **tasks.board_id** - Standard index
 - No **compound indexes** in Sprint 1
@@ -106,6 +112,7 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 | Task Description  | 1000 chars | 0 chars (Optional) | Prevent UI overflow and database bloat |
 | columns per board | 20 columns | 0 columns | Prevent UI overflow                    |
 | tasks per column  | 50 tasks   | 0 tasks | Prevent UI overflow                    |
+| boards per user   | 15 boards  | 0 boards | Prevent database bloat                  |
 
 ### 3.4 JWT Configuration
 
@@ -122,6 +129,10 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - **Owner ID:** Derived from JWT and validated against the User collection to ensure existence
 - **Members Array:** Initialized as empty array on creation
 - **ObjectId Validation:** Handled at infrastructure layer via CastError
+- **Quantity Limit:**
+   * **Constraint:** Maximum 15 boards per user.
+   * **Enforcement:** "Check-then-Act" strategy. The backend counts existing boards (countDocuments) before creation.
+   * **Concurrency:** No transaction required for MVP (Business Decision). "Double-click" race conditions are acceptable risks for this specific feature.
 
 ### 3.6 Column Validation Rules
 
