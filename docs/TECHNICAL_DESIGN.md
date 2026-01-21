@@ -17,7 +17,7 @@ The backend follows **Clean Architecture** principles to ensure decoupling betwe
 * **Global Error Handler:** The final safety net (Express Middleware). It intercepts all unhandled errors and performs the following transformations:
    * `Mongoose CastError` → `400 Bad Request` (Invalid ID)
    * `Mongoose Duplicate Key Error (11000)` → `409 Conflict` (Code: USER_002)
-   * Generic Errors → `500 Internal Server` Error
+   * **System Errors** (e.g., `bcrypt` hashing failure, DB connection loss) → `500 Internal Server Error` (Code: SERVER_001)
 
 ---
 
@@ -94,6 +94,7 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - Alphanumeric username with allowed special chars (`._%+-`)
 - Valid domain structure
 - Minimum 2-character TLD
+- **Normalization:** The system accepts mixed-case input (e.g., User@Gmail.com) to improve UX, but converts it to lowercase (user@gmail.com) in the Use Case layer before validation or storage
 
 ### 3.2 Password Policy
 
@@ -101,6 +102,9 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - **Maximum Length:** 50 characters (prevents DoS via bcrypt)
 - **Complexity:** None (Sprint 1)
 - **Hashing:** Bcrypt with 10 salt rounds
+- **Whitespace Handling:**
+  - **Trimming:** Leading and trailing whitespace is silently removed (e.g., `" pass "` becomes `"pass"`).
+  - **Internal Spaces:** Spaces *inside* the password are **allowed and preserved** to support passphrases (e.g., `"correct horse battery staple"`).
 
 ### 3.3 Field Length Limits
 
@@ -260,6 +264,23 @@ The system enforces sequential ordering (0-based index) for both Columns and Tas
    * **Concurrency Safety:** Relies on the Column Lock (acquired via ColumnModel.findByIdAndUpdate) to ensure no other tasks are inserted simultaneously, preventing duplicate order indices.
 
 ### 3.13 Input Sanitization Strategy
-* **Strategy:** Defensive Trimming
-   * All string inputs (`name`, `email`) are sanitized using `(input || "").trim()` before any presence or format validation.
-   * **Reason:** Prevents runtime crashes on `undefined` values and ensures " " (whitespace only) is treated as a missing field during validation.
+* **Strategy:** Defensive Normalization (Defense in Depth)
+   * All string inputs (`name`, `email`, `title`, `description`, `password`) are sanitized using `(input || "").trim()` in the **Use Case layer** before processing
+   * **Reason:** Prevents runtime crashes on `undefined` values and fixes accidental whitespace insertion (common on mobile keyboards).
+   * **Special Note on Passwords:** While the system trims the *edges* of the password string to prevent login errors from invisible characters, it **strictly preserves** internal whitespace. This allows users to use secure passphrases.
+   * **Lowercasing:** Email addresses are explicitly converted to lowercase in the **Use Case layer**.
+      * **Reason:** Ensures business logic (like finding a user) operates on consistent data without relying solely on the database.
+   * **Database Safety Net:** The Mongoose Schema also maintains `trim: true` and `lowercase: true`. This acts as a final fail-safe to guarantee data integrity even if the application layer logic is bypassed or bugged.
+
+### 3.14 Rate Limiting Strategy
+* **Global Limiter:**
+   * **Window:** 15 minutes
+   * **Max:** 100 requests per IP
+   * **Store:** Memory (standard `express-rate-limit`)
+
+* **Auth Limiter (Strict):**
+   * **Target Endpoints:** Registration (`/register`) and Login (`/login`)
+   * **Window:** 15 minutes
+   * **Max:** 5 requests per IP
+   * **Message:** "Too many login/registration attempts, please try again later."
+   * **Rationale:** Mitigates brute-force attacks on user passwords and prevents bot-driven database bloat.
