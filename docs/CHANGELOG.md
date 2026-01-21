@@ -96,3 +96,31 @@ All notable changes to the FlowState project documentation and implementation.
 - DELETE /boards/:id (board deletion)
 - Pagination for board lists
 - Member detail population
+
+---
+
+**Date:** January 20, 2026
+**Feature:** User Registration (`RegisterUserUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `RegisterUserUseCase` with strictly typed DTOs for request/response payloads.
+* **Defensive Sanitization:** Added `(input || "").trim()` strategy to `name` and `email` fields 
+* **Security Validation:**
+    * Enforced password length constraints (Min: 8, Max: 128 characters), name constrints(Max: 100 chars), email constraints(Max: 255) via `businessRules` constants.
+
+#### Changed
+* **API Response Structure:** Updated `RegisterResponseDTO` to return nested `user` object (containing `id`, `name`, `email`, `role`, `created_at`) alongside the `token`, strictly adhering to API Specification v1.0.
+* **Error Handling Strategy:**
+    * Moved from "Out of Scope" to **"First Write Wins"** strategy for registration race conditions.
+    * Relies on MongoDB `unique: true` index to throw duplicate key errors.
+    * Global Error Handler updated to map MongoDB error code `11000` to API error `409 Conflict` (`USER_002`).
+
+#### Documentation Updates
+* **TECHNICAL_DESIGN.md:**
+    * Added "Defensive Trimming" to Input Sanitization Strategy.
+* **API_SPECIFICATION.md:**
+    * Added `409 Conflict` (USER_002) response for duplicate emails.
+    * Clarified `VAL_002` for missing/whitespace-only fields.
+* **SECURITY.md:**
+    * Updated Input Sanitization status to "Basic Trim Implemented".
+    * Clarified race condition handling via DB constraints.
