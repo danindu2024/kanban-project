@@ -46,16 +46,29 @@ POST `api/auth/register`
   "name": "John Doe"
 }
 ```
+
 * **Response (201 Created):**
 ```json
 {
   "success": true,
   "data": {
     "token": "eyJhbGciOiJIUz...",
-    "user": { "id": "123", "email": "user@example.com", "role": "user" }
+    "user": { "id": "123", "email": "user@example.com", "role": "user", "created_at": "2025-01-20T10:00:00Z" }
   }
 }
 ```
+
+* **Error (409 Conflict - User Already Exists):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_002",
+    "message": "User with this email already exists"
+  }
+}
+```
+
 ### 2.2 Login
 POST `api/auth/login`
 * **Body:**
@@ -422,13 +435,13 @@ POST `api/columns [Auth]`
 }
 ```
 
-* **Error (400 Bad Request - Empty/Whitespace Title):**
+* **Error (400 Bad Request - Missing Fields):**
 ```json
 {
   "success": false,
   "error": {
-    "code": "VAL_001",
-    "message": "Column title cannot be empty"
+    "code": "VAL_002",
+    "message": "Required fields are not provided"
   }
 }
 ```
@@ -567,13 +580,13 @@ POST `api/tasks [Auth]`
 }
 ```
 
-* **Error (400 Bad Request - empty/whitespace-only title):**
+* **Error (400 Bad Request - Missing Fields):**
 ```json
 {
   "success": false,
   "error": {
-    "code": "VAL_003",
-    "message": "Task title cannot be empty" 
+    "code": "VAL_002",
+    "message": "Required fields are not provided"
   }
 }
 ```
@@ -684,6 +697,7 @@ DELETE `api/tasks/:id [Auth]`
 | `401`          | Unauthorized   | Missing or invalid Token            |
 | `403`          | Forbidden   | Valid token, but not allowed (e.g., deleting someone else's board) |
 | `404`    | Not Found     | ID does not exist               |
+| `409`    | Conflict     | Resource already exists (e.g., Duplicate Email)               |
 | `500`    | Server Error     | Something went wrong on the backend               |
 
 ## 6: Rate Limiting
@@ -710,7 +724,7 @@ DELETE `api/tasks/:id [Auth]`
 |TASK_001|Task Not Found|Requested task doesn't exist|Invalid task ID|
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
-|VAL_002|MISSING_REQUIRED_FIELDS|Required fields are not provided|User hasn't provided required fields|
+|VAL_002|MISSING_REQUIRED_FIELDS|Required fields are not provided|User hasn't provided required fields or contain only whitespace|
 |VAL_003|Business Rule Violation|Request technically valid but violates logic constraints|Exceeding 20 tasks/column, Title > 150 chars|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
 |URL_001|URL Not Found|URL Not Fount|Undefined URL|
