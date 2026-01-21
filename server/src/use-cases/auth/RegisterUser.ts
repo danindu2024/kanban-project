@@ -34,14 +34,16 @@ export class RegisterUserUseCase {
     // basic input sanitize
     // XSS attaches are handled by React's default escaping
     const sanitizedName = (name || "").trim()
-    const sanitizedEmail = (email || "").trim()
+    const sanitizedEmail = (email || "").toLowerCase().trim()
+    const sanitizedPassword= (password || "").trim()
 
     // Basic input presence validation
-    if (!sanitizedName || !sanitizedEmail || !password) {
+    if (!sanitizedName || !sanitizedEmail || !sanitizedPassword) {
       throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, 'Missing required fields', 400);
     }
 
     // Validate email format
+    // No complex email format validation for sprint 1
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(sanitizedEmail)) {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Invalid email format', 400);
@@ -53,7 +55,7 @@ export class RegisterUserUseCase {
     }
 
     // no strong password pattern check for sprint 1
-    if (password.length < businessRules.MIN_PASSWORD_LENGTH || password.length > businessRules.MAX_PASSWORD_LENGTH) {
+    if (sanitizedPassword.length < businessRules.MIN_PASSWORD_LENGTH || sanitizedPassword.length > businessRules.MAX_PASSWORD_LENGTH) {
       throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Password must be at least ${businessRules.MIN_PASSWORD_LENGTH} characters and must not exceed ${businessRules.MAX_PASSWORD_LENGTH} characters`, 400);
     }
 
@@ -61,8 +63,9 @@ export class RegisterUserUseCase {
       throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, 'Name must not exceed 100 characters', 400);
     }
 
+    // if bcrypt fails, error bubbles to the global error handler
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    const passwordHash = await bcrypt.hash(sanitizedPassword, salt);
 
     // duplicate email error is handled by db + global error handler
     
