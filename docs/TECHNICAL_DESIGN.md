@@ -14,7 +14,10 @@ The backend follows **Clean Architecture** principles to ensure decoupling betwe
 ### 1.2 Error Handling Strategy
 * **Repository Layer:** Does **not** catch database errors (e.g., connection failures, validation errors). All exceptions bubble up.
 * **Use Case Layer:** Catches specific functional errors (e.g., "Board not found" logic) but allows unexpected system errors to bubble up.
-* **Global Error Handler:** The final safety net (Express Middleware). It intercepts all unhandled errors, categorizes them (e.g., converting Mongoose `CastError` to `400 Bad Request`), and formats the response according to the API Specification.
+* **Global Error Handler:** The final safety net (Express Middleware). It intercepts all unhandled errors and performs the following transformations:
+   * `Mongoose CastError` → `400 Bad Request` (Invalid ID)
+   * `Mongoose Duplicate Key Error (11000)` → `409 Conflict` (Code: USER_002)
+   * Generic Errors → `500 Internal Server` Error
 
 ---
 
@@ -95,7 +98,7 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 ### 3.2 Password Policy
 
 - **Minimum Length:** 8 characters
-- **Maximum Length:** 128 characters (prevents DoS via bcrypt)
+- **Maximum Length:** 50 characters (prevents DoS via bcrypt)
 - **Complexity:** None (Sprint 1)
 - **Hashing:** Bcrypt with 10 salt rounds
 
@@ -255,3 +258,8 @@ The system enforces sequential ordering (0-based index) for both Columns and Tas
    * **Logic:** New Order = Count of Existing Tasks in Column
    * **Mechanism:** Inside the creation transaction, the system counts existing tasks for the target column (countDocuments). This count becomes the order index for the new task.
    * **Concurrency Safety:** Relies on the Column Lock (acquired via ColumnModel.findByIdAndUpdate) to ensure no other tasks are inserted simultaneously, preventing duplicate order indices.
+
+### 3.13 Input Sanitization Strategy
+* **Strategy:** Defensive Trimming
+   * All string inputs (`name`, `email`) are sanitized using `(input || "").trim()` before any presence or format validation.
+   * **Reason:** Prevents runtime crashes on `undefined` values and ensures " " (whitespace only) is treated as a missing field during validation.
