@@ -11,7 +11,7 @@ export interface IBoardDocument extends Document {
 const BoardSchema: Schema = new Schema({
   title: { type: String, required: true, trim: true },
   owner_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  members: [{ type: Schema.Types.ObjectId, ref: 'User', defualt: [] }],
+  members: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
 }, {
   timestamps: {
     createdAt: 'created_at',

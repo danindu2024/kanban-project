@@ -1,6 +1,7 @@
 export const businessRules = {
     MAX_TASKS_PER_COLUMN: 50,
     MAX_COLUMNS_PER_BOARD: 20,
+    MAX_BOARDS_PER_USER: 15,
     
     MAX_TASK_DESCRIPTION_LENGTH: 1000,
 

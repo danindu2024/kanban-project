@@ -40,7 +40,7 @@ export class CreateBoard {
     if(sanitizedTitle.length === 0){
       throw new AppError(
         ErrorCodes.MISSING_REQUIRED_FIELDS, 
-        "Title is required to create a board.",
+        "Title is required to create a board",
         400
       );
     }

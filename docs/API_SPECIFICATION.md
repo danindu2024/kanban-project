@@ -168,7 +168,7 @@ POST `api/boards [Auth]`
   "success": false,
   "error": {
     "code": "VAL_002",
-    "message": "Title is required to create a board."
+    "message": "Title is required to create a board"
   }
 }
 ```
@@ -180,7 +180,7 @@ POST `api/boards [Auth]`
   "success": false,
   "error": {
     "code": "VAL_001",
-    "message": "Board title must be less than 100 characters."
+    "message": "Board title must be less than <MAX_BOARD_TITLE_LENGTH> characters"
   }
 }
 ```
@@ -192,6 +192,28 @@ POST `api/boards [Auth]`
   "error": {
     "code": "USER_001",
     "message": "User not found"
+  }
+}
+```
+
+* **Error (400 Bad Request - CastError)**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Invalide OID foramt"
+  }
+}
+```
+
+* **Error (400 Bad Request - Limit Exceeded):**
+``` json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Can't create new board. Maximum limit(<MAX_BOARDS_PER_USER>) exceeded"
   }
 }
 ```
@@ -670,7 +692,8 @@ DELETE `api/tasks/:id [Auth]`
 * Returns 429 status code when exceeded
 
 ## 7: CORS Policy
-* **Allowed origins:** `http://localhost:3000`, `https://your-app.vercel.app`
+* **Allowed origins:** * Development: `http://localhost:3000`
+  * Production: defined via `FRONTEND_URL` env variable
 * **Credentials:** true
 * **Methods:** GET, POST, PATCH, DELETE
 
