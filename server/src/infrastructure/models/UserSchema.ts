@@ -7,6 +7,7 @@ export interface IUserDocument extends Document {
   password_hash: string;
   role: 'admin' | 'user';
   created_at: Date;
+  updated_at: Date;
 }
 
 // Define the Schema
@@ -25,7 +26,12 @@ const UserSchema: Schema = new Schema({
     enum: ['admin', 'user'], 
     default: 'user' 
   },
-  created_at: { type: Date, default: Date.now }
-});
+}, {
+  timestamps: {
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+  }
+}
+);
 
 export default mongoose.model<IUserDocument>('User', UserSchema);
