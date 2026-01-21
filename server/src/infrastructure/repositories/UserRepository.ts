@@ -24,6 +24,8 @@ export class UserRepository implements IUserRepository {
     password_hash: string;
     role?: 'admin' | 'user';
   }): Promise<UserEntity> {
+
+    // mongoDB unique constraint is enabled to handle to handle race condition
     const newUser = new UserModel(userData);
     const savedUser = await newUser.save();
     
