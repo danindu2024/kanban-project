@@ -1,5 +1,6 @@
 import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
+import { ITaskRepository } from "../../domain/repositories/ITaskRepository";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
 
@@ -20,13 +21,17 @@ interface RemoveMemberResponseDTO{
 export class RemoveMember{
     private boardRepository: IBoardRepository
     private userRepository: IUserRepository
+    private taskRepository: ITaskRepository
 
     constructor(
         boardRepository: IBoardRepository, 
-        userRepository: IUserRepository,){
+        userRepository: IUserRepository,
+        taskRepository: ITaskRepository
+    ){
 
         this.boardRepository = boardRepository
         this.userRepository = userRepository
+        this.taskRepository = taskRepository
     }
 
     async execute({boardId, userId, memberId}: RemoveMemberRequestDTO): Promise<RemoveMemberResponseDTO>{
@@ -66,6 +71,9 @@ export class RemoveMember{
         if(!updatedBoard){
             throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Board not found', 404)
         }
+
+        // remove member from tasks
+        await this.taskRepository.unassignUserFromBoard(boardId, memberId);
 
         return{
             id: updatedBoard.id,
