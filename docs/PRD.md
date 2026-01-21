@@ -79,13 +79,13 @@ To build "FlowState": a streamlined, professional-grade Kanban board tailored fo
 * Advanced monitoring tools (DataDog, ELK)
 * Kubernetes orchestration
 * Staging environment
-* Input sanitization (basic validation only)
-* MongoDB race condition handling for duplicate registrations
+* Input sanitization (whitespace sanitization only)
 * Token refresh mechanism
+* Automatic server-side retries for concurrent write conflicts
 
 ### 3.3 Explicit MVP Constraints
 * Single assignee per task only
-* "Last Write Wins" for concurrent edits
+* "Last Write Wins" for concurrent edits (except for Registration, which uses "First Write Wins" via Unique Constraints)
 * Internet connection required (no offline mode)
 * Manual board navigation (no search)
 * Empty state onboarding only (no tutorials)
