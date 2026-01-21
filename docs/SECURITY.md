@@ -107,7 +107,7 @@
 **Status:** Not implemented in Sprint 1
 
 **Current Behavior:**
-- User-supplied text (names, task descriptions) stored without sanitization
+- User-supplied text (name, title, description, email) stored after leading and trailing whitespace is stripped
 - Could contain HTML/JavaScript if maliciously crafted
 
 **Mitigation:**
