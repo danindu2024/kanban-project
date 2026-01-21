@@ -49,9 +49,13 @@ export class CreateTaskUseCase {
 
     async execute({ boardId, columnId, title, description, priority, assigneeId, userId}: CreateTaskRequestDTO): 
         Promise<CreateTaskResponseDTO> {
+        // basic input sanitize. Remove whitespaces
+        const sanitizedTitle = (title || "").trim()
+        const sanitizedDescription = (description || "").trim()
+
         // Check the presence of data
         // priority has default, so not checked here
-        if(!title || !boardId || !columnId){
+        if(!sanitizedTitle || !boardId || !columnId){
             throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, "Missing required fields", 400);
         }
 
@@ -103,14 +107,7 @@ export class CreateTaskUseCase {
             }
         }
 
-        // sanitize tite
-        const sanitizedTitle = title.trim()
-
-        // Validate title
-        // remove white space and check for empty title
-        if (sanitizedTitle.length === 0) {
-            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, "Task title cannot be empty", 400);
-        }
+        // validate title
         if (sanitizedTitle.length > businessRules.MAX_TASK_TITLE_LENGTH) {
             throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Task title must not exceed ${businessRules.MAX_TASK_TITLE_LENGTH} characters`, 400);
         }
@@ -122,9 +119,7 @@ export class CreateTaskUseCase {
         }
 
         // Validate description
-        // remove white spaces
-        const sanitizedDescription = description? description.trim() : undefined
-        if(sanitizedDescription && sanitizedDescription.length > businessRules.MAX_TASK_DESCRIPTION_LENGTH){
+        if(!sanitizedDescription && sanitizedDescription.length > businessRules.MAX_TASK_DESCRIPTION_LENGTH){
             throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Task description must not exceed ${businessRules.MAX_TASK_DESCRIPTION_LENGTH} characters`, 400);
         }
     

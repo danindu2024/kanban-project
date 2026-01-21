@@ -3,6 +3,12 @@ import { AppError } from '../utils/AppError';
 import env from '../utils/env';
 import { ErrorCodes } from '../constants/errorCodes';
 
+// Create mongoError extending Error
+interface MongoError extends Error {
+  code: number;
+  keyValue?: Record<string, any>;
+}
+
 export const errorHandler = (
   err: Error | AppError,
   req: Request,
@@ -20,6 +26,7 @@ export const errorHandler = (
     });
     return;
   }
+
   // Handle Mongoose CastError (invalid ObjectId)
   if (err.name === 'CastError') {
     res.status(400).json({
@@ -30,6 +37,19 @@ export const errorHandler = (
     },
   });
   return;
+  }
+
+  // Handle MongoDB Duplicate Key Error
+  // use a type assertion "as MongoError" to access .code
+  if((err as MongoError).code === 11000){
+    res.status(409).json({
+      success: false,
+      error: {
+        code: ErrorCodes.USER_ALREADY_EXISTS,
+        message: 'User with this email already exists'
+      }
+    });
+    return
   }
 
   // Generic error fallback

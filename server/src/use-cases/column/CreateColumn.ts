@@ -37,9 +37,11 @@ export class CreateColumnUseCase {
     }
 
     async execute({userId, boardId, title}: CreateColumnRequestDTO): Promise<CreateColumnResponseDTO> {
+        // basic input sanitize. Remove whitespaces
+        const sanitizedTitle = (title || "").trim()
 
         // check presence of data
-        if(!boardId || !title){
+        if(!boardId || !sanitizedTitle){
             throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, 'Required fields are not provided', 400);
         }
 
@@ -67,15 +69,8 @@ export class CreateColumnUseCase {
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can create column', 403)
         }
 
-        // sanitize title
-        const sanitizedTitle = title.trim()
-
-        // title validation
-        if (sanitizedTitle.length === 0) {
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Column title cannot be empty", 400);
-        }
         if(sanitizedTitle.length > businessRules.MAX_COLUMN_TITLE_LENGTH){
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, `Column title must not exceed ${businessRules.MAX_COLUMN_TITLE_LENGTH} characters`, 400);
+            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Column title must not exceed ${businessRules.MAX_COLUMN_TITLE_LENGTH} characters`, 400);
         }
 
         // Repository handles column order generation
