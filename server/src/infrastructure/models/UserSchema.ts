@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { businessRules } from '../../constants/businessRules';
 
 // Extend the Document interface to include User fields
 export interface IUserDocument extends Document {
@@ -18,7 +19,8 @@ const UserSchema: Schema = new Schema({
     required: true, 
     unique: true,
     trim: true,
-    lowercase: true 
+    lowercase: true,
+    maxLength: businessRules.MAX_EMAIL_LENGTH 
   },
   password_hash: { type: String, required: true },
   role: { 

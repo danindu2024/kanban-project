@@ -106,7 +106,7 @@ All notable changes to the FlowState project documentation and implementation.
 * **Core Use Case:** Implemented `RegisterUserUseCase` with strictly typed DTOs for request/response payloads.
 * **Defensive Sanitization:** Added `(input || "").trim()` strategy to `name` and `email` fields 
 * **Security Validation:**
-    * Enforced password length constraints (Min: 8, Max: 128 characters), name constrints(Max: 100 chars), email constraints(Max: 255) via `businessRules` constants.
+    * Enforced password length constraints (Min: 8, Max: 50 characters), name constrints(Max: 100 chars), email constraints(Max: 255) via `businessRules` constants.
 
 #### Changed
 * **API Response Structure:** Updated `RegisterResponseDTO` to return nested `user` object (containing `id`, `name`, `email`, `role`, `created_at`) alongside the `token`, strictly adhering to API Specification v1.0.

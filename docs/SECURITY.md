@@ -104,7 +104,7 @@
 ## 8. Known Security Limitations (Sprint 1)
 
 ### 8.1 Input Sanitization
-**Status:** Not implemented in Sprint 1
+**Status:** Basic trim implemented (whitespace only)
 
 **Current Behavior:**
 - User-supplied text (name, title, description, email) stored after leading and trailing whitespace is stripped
@@ -121,7 +121,7 @@
 ### 8.2 Password Policy
 **Current Requirements:**
 - Minimum 8 characters
-- Maximum 128 characters
+- Maximum 50 characters
 - No complexity requirements
 - No common password checks
 

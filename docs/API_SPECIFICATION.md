@@ -46,6 +46,7 @@ POST `api/auth/register`
   "name": "John Doe"
 }
 ```
+**Note:** Passwords are automatically trimmed of leading/trailing whitespace, but internal spaces are preserved.
 
 * **Response (201 Created):**
 ```json
@@ -68,6 +69,16 @@ POST `api/auth/register`
   }
 }
 ```
+
+* **Error (500 Internal Server Error - bcrypt failiure):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "SERVER_001",
+    "message": "Internal Server Error"
+  }
+}
 
 ### 2.2 Login
 POST `api/auth/login`
@@ -704,6 +715,9 @@ DELETE `api/tasks/:id [Auth]`
 * **Global limit:** 100 requests per 15 minutes per IP
 * Applied to all `/api/*` routes
 * Returns 429 status code when exceeded
+* **Auth limit:** 5 requests per 15 minutes per IP
+  * **Strictly Applied to:** `POST /api/auth/register` and `POST /api/auth/login`
+  * **Reason:** Prevents brute-force attacks and spam account creation.
 
 ## 7: CORS Policy
 * **Allowed origins:** * Development: `http://localhost:3000`

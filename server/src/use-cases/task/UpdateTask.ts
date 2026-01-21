@@ -45,7 +45,7 @@ export class UpdateTaskUseCase {
     : Promise<UpdateTaskResponseDTO | null> {
         // basic input validation
         if( title === undefined && description === undefined && priority === undefined && assigneeId === undefined ){
-            throw new AppError(ErrorCodes.MISSING_INPUT, "At least one field is required to update", 400);
+            throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, "At least one field is required to update", 400);
         }
         
         // Fetch independent data in parallel (User and Task)
