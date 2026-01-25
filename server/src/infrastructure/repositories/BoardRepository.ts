@@ -97,7 +97,7 @@ export class BoardRepository implements IBoardRepository {
         select: 'title order created_at updated_at', // Note: _id is auto-selected
         populate: {
           path: 'tasks',
-          select: 'title description priority assignee_id order created_at updated_at'
+          select: 'title description priority assignee_id order created_at updated_at' // Note: _id is auto-selected
         }
       })
       .exec();
@@ -105,6 +105,7 @@ export class BoardRepository implements IBoardRepository {
     if (!doc) return null;
 
     // cast to populated board documnet type
+    // We CANNOT avoid this cast because TS cannot infer deep population automatically
     const populatedDoc = doc as unknown as PopulatedBoardDoc;
 
     // Map the base Board fields using your existing helper
