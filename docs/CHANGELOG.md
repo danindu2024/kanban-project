@@ -126,10 +126,13 @@ All notable changes to the FlowState project documentation and implementation.
     * Clarified race condition handling via DB constraints.
 
 ---
+**Date** - 2025-01-25
+
 ### Board Details Implementation
 - **Feature:** Implemented `GET /api/boards/:id` endpoint.
-- **Architecture:** Utilized Mongoose Virtuals to populate the Board → Column → Task hierarchy efficiently.
-- **Repository:** Added `getPopulatedBoard` method with deep population and explicit Entity mapping.
-- **Performance:** Implemented parallel execution (`Promise.all`) for user validation and board retrieval in `GetBoardUseCase`.
-- **Security:** Enforced strict access control; only Admins, Board Owners, and Members can view board details.
+- **Architecture:** Implemented **Two-Phase Retrieval** strategy in `GetBoardUseCase`.
+    - Phase 1: Parallel fetch of User and Basic Board for low-latency permission checks.
+    - Phase 2: Deferred execution of `getPopulatedBoard` (Virtuals) to optimize resources.
+- **Repository:** Added `getPopulatedBoard` method with deep population.
+- **Security:** Enforced strict RBAC using lightweight metadata before loading heavy board content.
 - **Type Safety:** Defined explicit `PopulatedBoard` and `PopulatedColumn` interfaces to handle nested data structures.
