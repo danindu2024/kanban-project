@@ -19,6 +19,10 @@ The backend follows **Clean Architecture** principles to ensure decoupling betwe
    * `Mongoose Duplicate Key Error (11000)` → `409 Conflict` (Code: USER_002)
    * **System Errors** (e.g., `bcrypt` hashing failure, DB connection loss) → `500 Internal Server Error` (Code: SERVER_001)
 
+### 1.3 Performance Optimizations
+* **Parallel Execution:** `UseCase` utilizes `Promise.all` to fetch User metadata and Board data simultaneously, reducing latency.
+* **Virtual Population:** Board data retrieval relies on Mongoose Virtuals to fetch nested `Column` and `Task` data in a single optimized query operation rather than iterative N+1 queries.
+
 ---
 
 ## 2. Database Design (Schema)
@@ -78,6 +82,22 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 - **tasks.column_id** - Standard index
 - **tasks.board_id** - Standard index
 - No **compound indexes** in Sprint 1
+
+### 2.3 Data Population Strategy (Virtuals)
+
+To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) without complex aggregation pipelines or multiple round-trips, the system uses **Mongoose Virtuals**.
+
+* **Architecture:**
+    * **Board Schema:** Defines a virtual field `columns` that links to the `Column` collection via `localField: '_id'` and `foreignField: 'board_id'`.
+    * **Column Schema:** Defines a virtual field `tasks` that links to the `Task` collection via `localField: '_id'` and `foreignField: 'column_id'`.
+
+* **Execution:**
+    * The `BoardRepository.getPopulatedBoard` method uses deep population: `.populate({ path: 'columns', populate: { path: 'tasks' } })`.
+    * This allows the backend to fetch the entire board state in a single database query while keeping the database normalized (Tasks and Columns are stored in separate collections).
+
+* **Entity Mapping:**
+    * The Repository is responsible for casting the raw Mongoose Document (with `_id`) into a clean Domain Entity (`PopulatedBoard` with `id`).
+    * This ensures the Frontend receives a consistent, type-safe JSON structure without leaking database-specific implementation details (like `_v` or `_id`).
 
 ## 3. Validation & Security Rules
 
