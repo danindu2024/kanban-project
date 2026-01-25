@@ -10,7 +10,7 @@ export interface Board{
   updated_at: Date;
 }
 
-// 2. extended interface for populated columns
+// extended interface for populated columns
 export interface PopulatedBoard extends Board {
   columns: PopulatedColumn[]; 
 }
