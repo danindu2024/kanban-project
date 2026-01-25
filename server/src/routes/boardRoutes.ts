@@ -18,10 +18,11 @@ router.use(protect);
 
 // Route handlers
 router.post("/", boardController.createBoard);
-router.get("/", boardController.getBoards);
+router.get("/", boardController.getUserBoards);
 router.delete("/:id", boardController.deleteBoard)
 router.post("/:id/members", boardController.addMembers)
 router.delete("/:id/members/:userId", boardController.removeMember)
 router.patch("/:id", boardController.updateBoard)
+router.get("/:id", boardController.getBoard)
 
 export default router;
