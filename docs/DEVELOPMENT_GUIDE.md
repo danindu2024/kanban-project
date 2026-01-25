@@ -65,8 +65,10 @@
 
 ### 4.2 Type Safety
 
-* TypeScript strict mode enabled
-* No any types allowed (use unknown instead)
+* **TypeScript strict mode:** Enabled.
+* **No `any` types:** Strictly prohibited. Use `unknown` if the type is truly uncertain.
+* **Casting Exception (Mongoose Population):** * When using deep population (e.g., `.populate({ populate: { path: 'tasks' } })`), TypeScript cannot verify the structure of the nested data.
+    * **Allowed Pattern:** You may define a local type (e.g., `PopulatedBoardDoc`) inside the Repository and use `doc as unknown as PopulatedBoardDoc` to strictly type the response before mapping it to a Domain Entity.
 
 ### 4.3 Error Handling Standards
 

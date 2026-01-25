@@ -246,6 +246,7 @@ POST `api/boards [Auth]`
 GET `api/boards/:id [Auth]`
 
 * **Description:** Fetches the board, including all its columns and tasks (populated via virtual relationships).
+* **Note:** This endpoint performs a lightweight permission check before aggregating data. Invalid requests are rejected before heavy database operations occur.
 * **Permissions:** Admin, Board Owner, or Board Member.
 
 * **Response (200 OK):**

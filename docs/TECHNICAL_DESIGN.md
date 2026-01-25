@@ -20,9 +20,10 @@ The backend follows **Clean Architecture** principles to ensure decoupling betwe
    * **System Errors** (e.g., `bcrypt` hashing failure, DB connection loss) → `500 Internal Server Error` (Code: SERVER_001)
 
 ### 1.3 Performance Optimizations
-* **Parallel Execution:** `UseCase` utilizes `Promise.all` to fetch User metadata and Board data simultaneously, reducing latency.
-* **Virtual Population:** Board data retrieval relies on Mongoose Virtuals to fetch nested `Column` and `Task` data in a single optimized query operation rather than iterative N+1 queries.
-
+* **Two-Phase Retrieval:** The `GetBoardUseCase` utilizes a "Verify-then-Fetch" strategy.
+    1. **Phase 1 (Lightweight):** Fetches the `User` and `Basic Board` metadata in parallel (`Promise.all`) to perform fast authorization checks.
+    2. **Phase 2 (Heavyweight):** The resource-intensive `getPopulatedBoard` (Virtual Population) is executed *only* after access is guaranteed.
+    * *Benefit:* Prevents database strain by ensuring unauthorized requests do not trigger expensive aggregation/population queries.
 ---
 
 ## 2. Database Design (Schema)
@@ -98,6 +99,11 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
 * **Entity Mapping:**
     * The Repository is responsible for casting the raw Mongoose Document (with `_id`) into a clean Domain Entity (`PopulatedBoard` with `id`).
     * This ensures the Frontend receives a consistent, type-safe JSON structure without leaking database-specific implementation details (like `_v` or `_id`).
+
+#### Type Safety & Casting
+* **Constraint:** Mongoose's `populate()` method modifies the document structure at runtime (replacing IDs with Objects). TypeScript cannot statically analyze or verify these "inner" deeply populated fields (e.g., confirming that `columns[i].tasks` is an array of Documents rather than ObjectIds).
+* **Strategy:** To bridge this gap, we use **Explicit Double Casting** (`doc as unknown as PopulatedBoardDoc`) within the Repository layer.
+    * This is a necessary architectural trade-off: we manually assert the structure matches our `PopulatedBoardDoc` definition because the compiler cannot infer it automatically from the Mongoose model.
 
 ## 3. Validation & Security Rules
 
@@ -247,6 +253,13 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
 **Exhaustion:** N/A for Sprint 1.
 
 - **Constraints:** Hard limit of 50 tasks per column to minimize lock contention duration.
+
+#### C. Read-Time Race Conditions (Accepted Risk)
+* **Scenario:** A user requests `GET /boards/:id` while simultaneously being removed from the board by the owner.
+* **Race Condition (TOCTOU):** The system validates membership using the *Basic Board* in Phase 1. If the user is removed immediately after this check but before Phase 2 (Populated Fetch) completes, the system will proceed to fetch and return the board data.
+* **Mitigation:** **"Secure Writes, Optimistic Reads"**
+    * We accept that a removed user may view the board *one last time* in this specific millisecond window.
+    * Strict serialization (locking the board during reading) is rejected to maintain high read throughput.
 
 ### 3.11 Task Validation Rules
 * **Authorization:**
