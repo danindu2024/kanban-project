@@ -9,6 +9,7 @@ import { UpdateBoard } from "../use-cases/boards/UpdateBoard";
 import { IBoardRepository } from "../domain/repositories/IBoardRepository";
 import { IUserRepository } from "../domain/repositories/IUserRepository";
 import { ITaskRepository } from "../domain/repositories/ITaskRepository";
+import { GetBoardUseCase } from "../use-cases/boards/getBoard";
 
 export class BoardController {
   private createBoardUseCase: CreateBoard;
@@ -17,6 +18,7 @@ export class BoardController {
   private addMembersUseCase: AddMembers
   private removeMemberUseCase: RemoveMember
   private updateBoardUseCase: UpdateBoard
+  private getBoardUseCase: GetBoardUseCase
 
   constructor(boardRepository: IBoardRepository, userRepository: IUserRepository, taskRepository: ITaskRepository) {
     this.createBoardUseCase = new CreateBoard(boardRepository, userRepository);
@@ -25,6 +27,7 @@ export class BoardController {
     this.addMembersUseCase = new AddMembers(boardRepository, userRepository)
     this.removeMemberUseCase = new RemoveMember(boardRepository, userRepository, taskRepository)
     this.updateBoardUseCase = new UpdateBoard(boardRepository, userRepository)
+    this.getBoardUseCase = new GetBoardUseCase(boardRepository, userRepository)
   }
 
   createBoard = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -48,7 +51,7 @@ export class BoardController {
     }
   };
 
-  getBoards = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  getUserBoards = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // req.user is set by authMiddleware
       const userId = req.user!.id;
@@ -124,6 +127,22 @@ export class BoardController {
         data: updatedBoard
       })
 
+    }catch(error){
+      next(error)
+    }
+  }
+
+  getBoard = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try{
+      const boardId = req.params.id
+      const userId = req.user!.id
+
+      const board = await this.getBoardUseCase.execute({boardId, userId})
+
+      res.status(200).json({
+        success: true,
+        data: board
+      })
     }catch(error){
       next(error)
     }

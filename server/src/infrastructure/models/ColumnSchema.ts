@@ -16,8 +16,20 @@ const ColumnSchema: Schema = new Schema({
     timestamps: { 
         createdAt: 'created_at', // Map to snake_case names
         updatedAt: 'updated_at' 
-    }
+    },
+    // Enable virtuals in JSON response
+    toJSON: {virtuals: true},
+    toObject: {virtuals: true},
+    id: false // Disable duplicate 'id' field if _id exists
 })
+
+// Define the Virtual Relationship
+ColumnSchema.virtual('tasks', {
+  ref: 'Task',           
+  localField: '_id',     // Find tasks where `localField`
+  foreignField: 'column_id', // is equal to `foreignField`
+  options: { sort: { order: 1 } } // Default sort by order
+});
 
 ColumnSchema.index({ board_id: 1 });
 
