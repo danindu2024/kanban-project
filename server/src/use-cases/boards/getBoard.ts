@@ -23,35 +23,45 @@ export class GetBoardUseCase{
 
     async execute({boardId, userId}: GetBoardRequestDTO): Promise<GetBoardResponseDTO>{
         // basic input check
+        // invalid object ID is handled by global error handler
         if(!boardId){
             throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, 'Missing required fields', 400)
         }
 
-        // fetch user, populated board in parallel
-        const [user, populatedBoard] = await Promise.all([
+        // fetch user, board in parallel
+        const [user, board] = await Promise.all([
             this.userRepository.findById(userId),
-            this.boardRepository.getPopulatedBoard(boardId)
+            this.boardRepository.findById(boardId) // fetch basic board here instead of populated board. If user has no access or board doesn't existes, fetching populated is waste of resources
         ])
 
         // check user exists
+        // catched deleted users with unexpired tokens
         if(!user){
             throw new AppError(ErrorCodes.USER_NOT_FOUND, 'User not found', 404)
         }
 
-        // check board exists using populated board results
-        if(!populatedBoard){
+        // check board exists
+        if(!board){
             throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Requested board not found', 404)
         }
 
         // only admin, board owner or board member can fetch the board
         const isAdmin = user.role === 'admin'
-        const isBoardOwner = userId === populatedBoard.owner_id // OID are converted to string by repository
-        const isBoardMember = populatedBoard.members.includes(userId)
+        const isBoardOwner = userId === board.owner_id // OID are converted to string by repository
+        const isBoardMember = board.members.includes(userId)
 
         if(!isAdmin && !isBoardOwner && !isBoardMember){
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Board access denied', 403)
         }
 
+        // fetch populated board after all the validations
+        const populatedBoard = await this.boardRepository.getPopulatedBoard(boardId)
+
+        if(!populatedBoard){
+            throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Requested board not found', 404)
+        }
+
+        // no pagination strategy for sprint 1
         return populatedBoard
     }
 }
