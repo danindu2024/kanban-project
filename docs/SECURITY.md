@@ -57,9 +57,8 @@
 
 #### Trade-offs:
 
-* Authorization is implicit in data model (not explicit permission checks)
-* Suitable for simple ownership/membership model
-* More complex permissions would require explicit authorization layer
+* **Authorization is implicit in data model:** Suitable for simple ownership/membership model.
+* **View-Consistency:** The system prioritizes read performance over strict view consistency. A user removed from a board may retain read access for the duration of a single in-flight request, but write access is revoked immediately.
 
 ## 3: Conflict Resolution Strategy
 * **Strategy:** "Last Write Wins"
