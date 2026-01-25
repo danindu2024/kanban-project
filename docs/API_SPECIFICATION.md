@@ -245,24 +245,69 @@ POST `api/boards [Auth]`
 ### 3.3 Get Board Details (with Columns & Tasks)
 GET `api/boards/:id [Auth]`
 
-* **Description:** Fetches the board, including all its columns and tasks (populated).
+* **Description:** Fetches the board, including all its columns and tasks (populated via virtual relationships).
+* **Permissions:** Admin, Board Owner, or Board Member.
 
 * **Response (200 OK):**
 
 ```JSON
 
+```json
 {
   "success": true,
   "data": {
     "id": "b1",
     "title": "Project Alpha",
+    "owner_id": "u1",
+    "members": ["u2", "u3"],
+    "created_at": "2025-01-15T10:30:00.000Z",
+    "updated_at": "2025-01-15T11:00:00.000Z",
     "columns": [
       {
         "id": "c1",
+        "board_id": "b1",
         "title": "To Do",
-        "tasks": [ { "id": "t1", "title": "Fix Bug", "priority": "high" } ]
+        "order": 0,
+        "created_at": "2025-01-15T10:35:00.000Z",
+        "updated_at": "2025-01-15T10:35:00.000Z",
+        "tasks": [
+          {
+            "id": "t1",
+            "title": "Fix Bug",
+            "description": "Fix login error on safari",
+            "priority": "high",
+            "assignee_id": "u2",
+            "column_id": "c1",
+            "board_id": "b1",
+            "order": 0,
+            "created_at": "2025-01-16T09:00:00.000Z",
+            "updated_at": "2025-01-16T09:00:00.000Z"
+          }
+        ]
       }
     ]
+  }
+}
+```
+
+* **Error (404 Not Found - Board):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
+  }
+}
+```
+
+* **Error (403 Forbidden - Access Denied):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Board access denied"
   }
 }
 ```
