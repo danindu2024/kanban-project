@@ -4,6 +4,16 @@ import BoardModel, {IBoardDocument } from "../models/BoardSchema";
 import { businessRules } from "../../constants/businessRules";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
+import { PopulatedBoard } from "../../domain/entities/Board";
+import { IColumnDocument } from "../models/ColumnSchema";
+import { ITaskDocument } from "../models/TaskSchema";
+
+// Helper interface for populated board document
+type PopulatedBoardDoc = IBoardDocument & {
+  columns: (IColumnDocument & {
+    tasks: ITaskDocument[];
+  })[];
+};
 
 export class BoardRepository implements IBoardRepository {
   async create(boardData: 
@@ -78,6 +88,55 @@ export class BoardRepository implements IBoardRepository {
     )
     if(!updatedBoard) return null
     return this.mapToEntity(updatedBoard)
+  }
+
+  async getPopulatedBoard(boardId: string): Promise<PopulatedBoard | null> {
+    const doc = await BoardModel.findById(boardId)
+      .populate({
+        path: 'columns',
+        select: 'title order created_at updated_at', // Note: _id is auto-selected
+        populate: {
+          path: 'tasks',
+          select: 'title description priority assignee_id order created_at updated_at'
+        }
+      })
+      .exec();
+
+    if (!doc) return null;
+
+    // cast to populated board documnet type
+    const populatedDoc = doc as unknown as PopulatedBoardDoc;
+
+    // Map the base Board fields using your existing helper
+    const baseBoard = this.mapToEntity(doc);
+
+    // Construct the full PopulatedBoard object
+    const result: PopulatedBoard = {
+      ...baseBoard,
+      columns: populatedDoc.columns.map((col) => ({
+        id: col._id.toString(),
+        board_id: boardId,
+        title: col.title,
+        order: col.order,
+        created_at: col.created_at,
+        updated_at: col.updated_at,
+        // Map the Tasks inside the Column
+        tasks: col.tasks.map((task) => ({
+          id: task._id.toString(),
+          title: task.title,
+          description: task.description || "", // Handle optional fields
+          priority: task.priority,
+          assignee_id: task.assignee_id ? task.assignee_id.toString() : null,
+          column_id: col._id.toString(),
+          board_id: boardId,
+          order: task.order,
+          created_at: task.created_at,
+          updated_at: task.updated_at
+        }))
+      }))
+    };
+
+    return result;
   }
 
   private mapToEntity(doc: IBoardDocument): BoardEntity {
