@@ -1,4 +1,5 @@
 import { Board } from "../entities/Board";
+import { PopulatedBoard } from "../entities/Board";
 
 export interface IBoardRepository {
   create(boardData: {
@@ -12,4 +13,5 @@ export interface IBoardRepository {
   addMembers(boardId: string, members: string[]): Promise<Board | null>;
   removeMember(boardId: string, memberId: string): Promise<Board | null>;
   updateBoard(boardId: string, title: string): Promise<Board | null>;
+  getPopulatedBoard(boardId: string): Promise<PopulatedBoard | null>;
 }
