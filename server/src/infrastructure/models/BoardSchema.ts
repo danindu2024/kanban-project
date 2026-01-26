@@ -17,9 +17,9 @@ const BoardSchema: Schema = new Schema({
     createdAt: 'created_at',
     updatedAt: 'updated_at'
   },
-  // Enable virtuals in JSON response
-  toJSON: {virtuals: true},
-  toObject: {virtuals: true},
+  // schema configurations
+  toJSON: {virtuals: true}, // enable virtuals in json response
+  toObject: {virtuals: true}, // emable virtuals in object
   id: false // Disable duplicate 'id' field if _id exists
 }
 );
@@ -27,8 +27,8 @@ const BoardSchema: Schema = new Schema({
 // Define the Virtual Relationship
 BoardSchema.virtual('columns', {
   ref: 'Column',           
-  localField: '_id',     // Find tasks where `localField`
-  foreignField: 'board_id', // is equal to `foreignField`
+  localField: '_id',     // Find columns where `localField` in board
+  foreignField: 'board_id', // is equal to `foreignField` in column
   options: { sort: { order: 1 } } // Default sort by order
 });
 
