@@ -197,8 +197,6 @@ export class ColumnRepository implements IColumnRepository {
           board_id: doc.board_id.toString(),
           title: doc.title,
           order: doc.order,
-          // The tasks will be attached in the Use Case layer
-          tasks: undefined,
           created_at: doc.created_at,
           updated_at: doc.updated_at
         }

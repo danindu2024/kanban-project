@@ -1,10 +1,9 @@
 import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
-import { Board as BoardEntity } from "../../domain/entities/Board";
+import { Board as BoardEntity, PopulatedBoard as PopulatedBoardEntity} from "../../domain/entities/Board";
 import BoardModel, {IBoardDocument } from "../models/BoardSchema";
 import { businessRules } from "../../constants/businessRules";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
-import { PopulatedBoard } from "../../domain/entities/Board";
 import { IColumnDocument } from "../models/ColumnSchema";
 import { ITaskDocument } from "../models/TaskSchema";
 
@@ -90,7 +89,7 @@ export class BoardRepository implements IBoardRepository {
     return this.mapToEntity(updatedBoard)
   }
 
-  async getPopulatedBoard(boardId: string): Promise<PopulatedBoard | null> {
+  async getPopulatedBoard(boardId: string): Promise<PopulatedBoardEntity | null> {
     const doc = await BoardModel.findById(boardId)
       .populate({
         path: 'columns',
@@ -112,7 +111,7 @@ export class BoardRepository implements IBoardRepository {
     const baseBoard = this.mapToEntity(doc);
 
     // Construct the full PopulatedBoard object
-    const result: PopulatedBoard = {
+    const result: PopulatedBoardEntity = {
       ...baseBoard,
       columns: populatedDoc.columns.map((col) => ({
         id: col._id.toString(),

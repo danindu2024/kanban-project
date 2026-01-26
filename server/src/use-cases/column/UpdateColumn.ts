@@ -15,7 +15,6 @@ interface UpdateColumnResponseDTO {
     board_id: string;
     title: string;
     order: number;
-    tasks?: never[]; // Strictly typed as empty/undefined based on Repo
     created_at: Date;
 }
 
@@ -80,7 +79,6 @@ export class UpdateColumnUseCase{
             board_id: updatedColumn.board_id,
             title: updatedColumn.title,
             order: updatedColumn.order,
-            tasks: undefined, // tasks are not updated here
             created_at: updatedColumn.created_at
         };
     }

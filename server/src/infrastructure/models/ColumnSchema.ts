@@ -26,8 +26,8 @@ const ColumnSchema: Schema = new Schema({
 // Define the Virtual Relationship
 ColumnSchema.virtual('tasks', {
   ref: 'Task',           
-  localField: '_id',     // Find tasks where `localField`
-  foreignField: 'column_id', // is equal to `foreignField`
+  localField: '_id',     // Find tasks where `localField` in column
+  foreignField: 'column_id', // is equal to `foreignField` in tasks
   options: { sort: { order: 1 } } // Default sort by order
 });
 
