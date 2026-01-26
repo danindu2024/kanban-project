@@ -79,12 +79,25 @@ POST `api/auth/register`
     "message": "Internal Server Error"
   }
 }
+```
 
 ### 2.2 Login
 POST `api/auth/login`
+
 * **Body:**
 ```json
 { "email": "user@example.com", "password": "securePassword123" }
+```
+
+* **Error (401 unautorized - invalide email or password):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "AUTH_001",
+    "message": "Invalide email or password"
+  }
+}
 ```
 
 * **Response (200 OK):** returns same structure as Register
@@ -775,7 +788,7 @@ DELETE `api/tasks/:id [Auth]`
 
 |Code|Name|Description|Common Causes|
 | :-------------- | :------- | :---------------------- | :---  |
-|AUTH_001|Invalid Credentials|Email or password incorrect|Login with wrong password|
+|AUTH_001|Invalid Credentials|Invalide email or password|User provided wrong password or unregistered email (Generic message prevents enumeration)|
 |AUTH_002|Token Expired|JWT has expired|Session timeout|
 |AUTH_003|Token Invalid|JWT signature invalid|Tampered token|
 |AUTH_004|User Not Authenticated|User identity not verified|Missing user in JWT payload|
