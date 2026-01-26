@@ -16,7 +16,6 @@ interface CreateColumnResponseDTO {
     board_id: string;
     title: string;
     order: number;
-    tasks: never[]; // Explicitly typed as an empty array for new columns
     created_at: Date;
     // updated_at is not passed as this is a newly created object
 }
@@ -84,7 +83,6 @@ export class CreateColumnUseCase {
             board_id: newColumn.board_id,
             title: newColumn.title,
             order: newColumn.order,
-            tasks: [],
             created_at: newColumn.created_at
         };
     }
