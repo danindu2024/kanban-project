@@ -54,7 +54,13 @@ POST `api/auth/register`
   "success": true,
   "data": {
     "token": "eyJhbGciOiJIUz...",
-    "user": { "id": "123", "email": "user@example.com", "role": "user", "created_at": "2025-01-20T10:00:00Z" }
+    "user": { 
+      "id": "123", 
+      "name": "John Doe", 
+      "email": "user@example.com", 
+      "role": "user", 
+      "created_at": "2025-01-20T10:00:00Z" 
+    }
   }
 }
 ```
@@ -88,7 +94,23 @@ POST `api/auth/login`
 ```json
 { "email": "user@example.com", "password": "securePassword123" }
 ```
-* **Response (200 OK):** returns same structure as Register
+* **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUz...",
+    "user": { 
+      "id": "123", 
+      "name": "username",
+      "email": "user@example.com", 
+      "role": "user", 
+      "created_at": "2025-01-20T10:00:00Z",
+      "updated_at": "2025-01-27T10:00:00Z" 
+    }
+  }
+}
+```
 
 * **Error (401 unautorized - invalide email or password):**
 ```json
@@ -101,13 +123,24 @@ POST `api/auth/login`
 }
 ```
 
-* **Error (401 unautorized - invalide email or password):**
+* **Error (401 unautorized - invalide email or password length):**
 ```json
 {
   "success": false,
   "error": {
-    "code": "VAL_003",
-    "message": "email exceed maximum allowed length"
+    "code": "AUTH_001",
+    "message": "Invalide email or password"
+  }
+}
+```
+
+* **Error (400 Bad Request - Missing Fields)**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_002",
+    "message": "Missing required fields"
   }
 }
 ```
@@ -799,7 +832,7 @@ DELETE `api/tasks/:id [Auth]`
 
 |Code|Name|Description|Common Causes|
 | :-------------- | :------- | :---------------------- | :---  |
-|AUTH_001|Invalid Credentials|Invalide email or password|User provided wrong password or unregistered email (Generic message prevents enumeration)|
+|AUTH_001|Invalid Credentials|Invalide email or password|Wrong password, unregistered email, or violation of field length limits during login|
 |AUTH_002|Token Expired|JWT has expired|Session timeout|
 |AUTH_003|Token Invalid|JWT signature invalid|Tampered token|
 |AUTH_004|User Not Authenticated|User identity not verified|Missing user in JWT payload|
@@ -808,7 +841,7 @@ DELETE `api/tasks/:id [Auth]`
 |TASK_001|Task Not Found|Requested task doesn't exist|Invalid task ID|
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
-|VAL_002|MISSING_REQUIRED_FIELDS|Required fields are not provided|User hasn't provided required fields or contain only whitespace|
+|VAL_002|MISSING_REQUIRED_FIELDS|Missing required fields|User hasn't provided required fields or contain only whitespace|
 |VAL_003|Business Rule Violation|Request technically valid but violates logic constraints|Exceeding 20 tasks/column, Title > 150 chars, Email > 255 chars, Password > 50 chars|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
 |URL_001|URL Not Found|URL Not Fount|Undefined URL|
