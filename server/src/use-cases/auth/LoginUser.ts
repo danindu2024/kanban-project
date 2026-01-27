@@ -11,11 +11,15 @@ interface LoginRequestDTO {
 }
 
 interface LoginResponseDTO{
-  id: string
-  name: string
-  email: string
-  role: string
   token: string
+  user: {
+    id: string
+    name: string
+    email: string
+    role: string
+    created_at: Date
+    updated_at: Date
+  }
 }
 
 export class LoginUserUseCase {
@@ -40,10 +44,10 @@ export class LoginUserUseCase {
 
     // length validation to prevent resource exhaustion
     if(sanitizedEmail.length > businessRules.MAX_EMAIL_LENGTH){
-      throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, 'email exceed maximum allowed length', 400)
+      throw new AppError(ErrorCodes.INVALID_CREDENTIALS, 'Invalid email or password', 401)
     }
-    if(sanitizedPassword.length > businessRules.MAX_PASSWORD_LENGTH){
-      throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, 'password exceed maximum allowed length', 400)
+    if(sanitizedPassword.length > businessRules.MAX_PASSWORD_LENGTH || sanitizedPassword.length < businessRules.MIN_PASSWORD_LENGTH){
+      throw new AppError(ErrorCodes.INVALID_CREDENTIALS, 'Invalid email or password', 401)
     }
 
     // Validate email format
@@ -60,6 +64,7 @@ export class LoginUserUseCase {
     }
 
     // Check if password matches
+    // password trimming happens when creating user. So trimminh password input doesn't affect for login
     const isMatch = await bcrypt.compare(sanitizedPassword, user.password_hash);
     if (!isMatch) {
       throw new AppError(ErrorCodes.INVALID_CREDENTIALS, 'Invalide email or password', 401);
@@ -69,11 +74,15 @@ export class LoginUserUseCase {
     const token = generateToken(user.id);
     
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
       token,
+      user:{
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      }
     };
   }
 }
