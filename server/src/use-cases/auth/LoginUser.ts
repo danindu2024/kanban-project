@@ -3,6 +3,7 @@ import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { generateToken } from '../../utils/jwt';
 import { AppError } from '../../utils/AppError';
 import { ErrorCodes } from '../../constants/errorCodes';
+import { businessRules } from '../../constants/businessRules';
 
 interface LoginRequestDTO {
   email: string;
@@ -35,6 +36,14 @@ export class LoginUserUseCase {
     // Basic presence validation
     if (!sanitizedEmail || !sanitizedPassword) {
       throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, 'Missing required fields', 400);
+    }
+
+    // length validation to prevent resource exhaustion
+    if(sanitizedEmail.length > businessRules.MAX_EMAIL_LENGTH){
+      throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, 'email exceed maximum allowed length', 400)
+    }
+    if(sanitizedPassword.length > businessRules.MAX_PASSWORD_LENGTH){
+      throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, 'password exceed maximum allowed length', 400)
     }
 
     // Validate email format
