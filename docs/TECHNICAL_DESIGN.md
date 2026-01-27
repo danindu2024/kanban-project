@@ -304,6 +304,9 @@ The system enforces sequential ordering (0-based index) for both Columns and Tas
    * **Lowercasing:** Email addresses are explicitly converted to lowercase in the **Use Case layer**.
       * **Reason:** Ensures business logic (like finding a user) operates on consistent data without relying solely on the database.
    * **Database Safety Net:** The Mongoose Schema also maintains `trim: true` and `lowercase: true`. This acts as a final fail-safe to guarantee data integrity even if the application layer logic is bypassed or bugged.
+   * **Implementation:** Before performing Regex validation or Password Hashing, the system enforces strict length limits.
+   * **Security Masking (Login Only):** While other endpoints (like Registration) may return specific `VAL_003` errors, the Login use case will catch length violations and throw a generic `AUTH_001` (Invalid email or password) error.
+   * **Goal:** Fail fast to prevent DoS attacks while ensuring zero information leakage regarding internal validation constraints.
 
 #### Resource Exhaustion Protection
 * **Context:** Bcrypt and Regex operations are CPU-intensive.
