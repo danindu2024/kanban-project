@@ -305,6 +305,13 @@ The system enforces sequential ordering (0-based index) for both Columns and Tas
       * **Reason:** Ensures business logic (like finding a user) operates on consistent data without relying solely on the database.
    * **Database Safety Net:** The Mongoose Schema also maintains `trim: true` and `lowercase: true`. This acts as a final fail-safe to guarantee data integrity even if the application layer logic is bypassed or bugged.
 
+#### Resource Exhaustion Protection
+* **Context:** Bcrypt and Regex operations are CPU-intensive.
+* **Implementation:** Before performing Regex validation or Password Hashing, the system enforces strict length limits:
+    * Email > 255 chars → throws `VAL_003`
+    * Password > 50 chars → throws `VAL_003`
+* **Goal:** Fail fast to prevent Denial of Service (DoS) attacks via massive payloads.
+
 ### 3.14 Rate Limiting Strategy
 * **Global Limiter:**
    * **Window:** 15 minutes
