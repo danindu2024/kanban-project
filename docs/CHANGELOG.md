@@ -136,3 +136,29 @@ All notable changes to the FlowState project documentation and implementation.
 - **Repository:** Added `getPopulatedBoard` method with deep population.
 - **Security:** Enforced strict RBAC using lightweight metadata before loading heavy board content.
 - **Type Safety:** Defined explicit `PopulatedBoard` and `PopulatedColumn` interfaces to handle nested data structures.
+
+---
+
+**Date:** January 28, 2026 Feature: User Login (`LoginUserUseCase`)
+
+**Added**
+* Core Use Case: Implemented LoginUserUseCase to handle user authentication and token generation.
+* Security - Resource Protection: Added pre-emptive length validation checks for email (>255 chars) and password (>50 chars) to prevent DoS attacks via resource exhaustion (Bcrypt/Regex overloading).
+* Security - Enumeration Prevention: Implemented a "Generic Error Strategy" for the Login endpoint. Validation violations (e.g., password too short/long) now throw a generic AUTH_001 (Invalid email or password) instead of specific validation errors to prevent attackers from probing internal business rules.
+
+**Changed**
+* Sanitization Logic: Applied strict defensive sanitization to login inputs:
+* Email: Trimmed and converted to lowercase to ensure case-insensitive matching.
+* Password: Trimmed leading/trailing whitespace (preserving internal spaces).
+* Error Handling: Updated VAL_002 error message to "Missing required fields" to strictly match the implementation and API Specification.
+
+**Documentation Updates**
+* API_SPECIFICATION.md:
+    * Updated POST `/auth/login` error responses to reflect the generic `AUTH_001` strategy.
+    * Corrected the `VAL_002` error description in the Error Codes Reference.
+
+* TECHNICAL_DESIGN.md:
+Documented the security exception for Login validation (masking errors vs. fail-fast).
+
+* SECURITY.md:
+Updated Error Codes Reference to include "violation of field length limits" as a cause for AUTH_001.

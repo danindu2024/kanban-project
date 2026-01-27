@@ -40,7 +40,8 @@ export class UserRepository implements IUserRepository {
       email: doc.email,
       password_hash: doc.password_hash,
       role: doc.role,
-      created_at: doc.created_at
+      created_at: doc.created_at,
+      updated_at: doc.updated_at
     };
   }
 }
