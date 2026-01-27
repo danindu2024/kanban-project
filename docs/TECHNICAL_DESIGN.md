@@ -14,7 +14,8 @@ The backend follows **Clean Architecture** principles to ensure decoupling betwe
 ### 1.2 Error Handling Strategy
 * **Repository Layer:** Does **not** catch database errors (e.g., connection failures, validation errors). All exceptions bubble up.
 * **Use Case Layer:** Catches specific functional errors (e.g., "Board not found" logic) but allows unexpected system errors to bubble up.
-* **Global Error Handler:** The final safety net (Express Middleware). It intercepts all unhandled errors and performs the following transformations:
+   * **User Lookups:** If a userId provided by the auth middleware is not found in the database, the use case must throw AppError(USER_001, 'User not found', 404).
+* **Global Error Handler:** The final safety net (Express Middleware). It Intercepts all unhandled errors and AppError instances to ensure a consistent JSON envelope and performs the following transformations:
    * `Mongoose CastError` → `400 Bad Request` (Invalid ID)
    * `Mongoose Duplicate Key Error (11000)` → `409 Conflict` (Code: USER_002)
    * **System Errors** (e.g., `bcrypt` hashing failure, DB connection loss) → `500 Internal Server Error` (Code: SERVER_001)
