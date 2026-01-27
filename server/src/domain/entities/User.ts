@@ -5,4 +5,5 @@ export interface User {
   password_hash: string;
   role: 'admin' | 'user';
   created_at: Date;
+  updated_at: Date;
 }
