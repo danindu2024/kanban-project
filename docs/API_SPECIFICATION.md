@@ -88,6 +88,7 @@ POST `api/auth/login`
 ```json
 { "email": "user@example.com", "password": "securePassword123" }
 ```
+* **Response (200 OK):** returns same structure as Register
 
 * **Error (401 unautorized - invalide email or password):**
 ```json
@@ -100,7 +101,17 @@ POST `api/auth/login`
 }
 ```
 
-* **Response (200 OK):** returns same structure as Register
+* **Error (401 unautorized - invalide email or password):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "email exceed maximum allowed length"
+  }
+}
+```
+
 ### 2.3 Get Current User
 GET `api/auth/me [Auth]`
 
@@ -798,7 +809,7 @@ DELETE `api/tasks/:id [Auth]`
 |TASK_002|Invalid Column|Target column doesn't exist|Moving task to deleted column|
 |VAL_001|Validation Error|Request body validation failed|Missing required fields|
 |VAL_002|MISSING_REQUIRED_FIELDS|Required fields are not provided|User hasn't provided required fields or contain only whitespace|
-|VAL_003|Business Rule Violation|Request technically valid but violates logic constraints|Exceeding 20 tasks/column, Title > 150 chars|
+|VAL_003|Business Rule Violation|Request technically valid but violates logic constraints|Exceeding 20 tasks/column, Title > 150 chars, Email > 255 chars, Password > 50 chars|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
 |URL_001|URL Not Found|URL Not Fount|Undefined URL|
 |SERVER_001|INTERNAL ERROR|Internal Server doesn't work|server crashes|
