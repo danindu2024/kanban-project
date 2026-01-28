@@ -185,6 +185,17 @@ GET `api/auth/me [Auth]`
 }
 ```
 
+* **Error (401 Unauthorized - User not found):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
 ## 3 Boards
 ### 3.1 Get All Boards
 GET `api/boards [Auth]`
