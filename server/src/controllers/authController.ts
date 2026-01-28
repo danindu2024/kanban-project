@@ -39,8 +39,9 @@ export class AuthController {
 
   getCurrentUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
+      const userId = req.user!.id // auth middleware ensure user id exisits
 
-      const user = await this.getCurrentUserUseCase.execute(req.user!.id);
+      const user = await this.getCurrentUserUseCase.execute({userId});
       res.status(200).json({ success: true, data: user });
     } catch (error) {
         next(error);
