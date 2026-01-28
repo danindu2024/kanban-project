@@ -162,3 +162,20 @@ Documented the security exception for Login validation (masking errors vs. fail-
 
 * SECURITY.md:
 Updated Error Codes Reference to include "violation of field length limits" as a cause for AUTH_001.
+
+---
+**Date:** January 28, 2026 
+**Feature:** Get Current User (`api/auth/me`)
+
+#### Added
+* **Core Use Case:** Implemented functionality to retrieve the currently authenticated user's profile data.
+* **Token Validation:** Integrated JWT verification middleware to extract and validate the `userId` from the Authorization header.
+
+#### Changed
+* **Security - Identity Verification:** Implemented a mandatory database lookup to ensure the user still exists. If the `userId` in the JWT is valid but the user has been deleted from the database, the system now throws a specific `USER_001` (User not found) error.
+* **Error Handling:** * Distinguished between session issues: `AUTH_002` for expired tokens and `AUTH_003` for tampered/invalid signatures.
+    * Standardized the response to strictly return `id`, `name`, `email`, and `role`, preventing the leakage of sensitive fields like `password_hash`.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:** Finalized the `200 OK` response structure and added the `401 Unauthorized` error scenarios for the `/me` endpoint.
+* **TECHNICAL_DESIGN.md:** Documented the "User Lookup" requirement in the Error Handling Strategy to ensure consistency across all authenticated routes.
