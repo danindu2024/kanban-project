@@ -61,7 +61,7 @@ export class TaskController {
                 title, 
                 description, 
                 priority, 
-                assigneeId: assignee_id,
+                assignee_id,
                 taskId,
                 userId
              });
