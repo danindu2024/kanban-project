@@ -792,6 +792,17 @@ PATCH `api/tasks/:id [Auth]`
 }
 ```
 
+* **Error (404 Not Found - Assignee User Not Found):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "Assignee doesn't exist"
+  }
+}
+```
+
 ### 5.4 Delete Task
 DELETE `api/tasks/:id [Auth]`
 * **Permission:** RESTRICTED. Only Board Owner or Admin can delete tasks.
