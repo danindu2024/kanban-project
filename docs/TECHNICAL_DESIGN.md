@@ -284,6 +284,9 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
    * **Implementation:** Enforced via MongoDB Transaction with Pessimistic Locking.
    * **Mechanism:** The system locks the parent Column document (via findByIdAndUpdate) before counting existing tasks to prevent concurrent inserts from exceeding the limit.
 
+* **Update Constraints:**
+   **Minimum Payload:** The request must contain at least one updatable field (`title`, `description`, `priority`, or `assignee_id`). If the payload is empty, the system throws `VAL_002` (Missing required fields).
+
 ### 3.12 Order Generation Logic
 The system enforces sequential ordering (0-based index) for both Columns and Tasks to support consistent UI rendering and drag-and-drop operations.
 

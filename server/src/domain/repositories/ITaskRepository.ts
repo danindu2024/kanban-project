@@ -16,9 +16,9 @@ export interface ITaskRepository {
   
   update(taskId: string, 
     updatesData: {
-      title: string, 
+      title?: string, 
       description?: string, 
-      priority: Priority, 
+      priority?: Priority, 
       assignee_id?: string | null}): Promise<Task | null>;
 
   delete(taskId: string): Promise<boolean>;

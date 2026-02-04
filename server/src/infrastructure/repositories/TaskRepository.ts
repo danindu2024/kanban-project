@@ -85,19 +85,27 @@ export class TaskRepository implements ITaskRepository {
     return taskDocs.map((doc) => this.mapToEntity(doc));
   }
 
-  async update(taskId: string, updatesData: {
-        title: string, 
-        description?: string, 
-        priority: Priority, 
-        assignee_id?: string | null}): Promise<TaskEntity | null>{
+  async update(taskId: string, 
+    updatesData: {
+        title?: string;
+        description?: string;
+        priority?: Priority;
+        assignee_id?: string | null
+    }): Promise<TaskEntity | null>{
 
+    // No transaction needed. Mongoose handles atomicity for single docs.
     const updatedTask = await TaskModel.findByIdAndUpdate(
-      taskId,
-      updatesData,
-      { new: true, runValidators: true }
-    );
-    
-    return updatedTask ? this.mapToEntity(updatedTask) : null;
+        taskId, updatesData, 
+        { 
+          new: true,            // Return the modified document
+          runValidators: true   // Enforce Schema validation
+        }
+    ).exec();
+
+    // Return null if task not found
+    if (!updatedTask) return null;
+
+    return this.mapToEntity(updatedTask);
   }
 
   async delete(taskId: string): Promise<boolean> {
