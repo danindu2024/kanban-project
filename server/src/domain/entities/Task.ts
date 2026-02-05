@@ -1,4 +1,9 @@
-export type Priority = 'low' | 'medium' | 'high';
+// Define the values as a constant "tuple"
+export const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
+
+// Derive the type automatically from the array
+// This is equivalent to: type Priority = 'low' | 'medium' | 'high';
+export type Priority = typeof VALID_PRIORITIES[number];
 
 export interface Task {
   id: string;
