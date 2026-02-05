@@ -80,6 +80,28 @@
     * Throw `AppError` for business logic violations (e.g., "Limit Exceeded").
     * Do not catch DB errors unless you need to transform a specific error (e.g., unique constraint violation) into a domain-specific message.
 
+### 4.4 Constants & Union Types (Single Source of Truth)
+* **Pattern:** Use the "Tuple-to-Union" pattern instead of standard TypeScript `enum` or hardcoding string arrays in Use Cases.
+* **Goal:** Ensure the Domain Entity, Type Definition, and Validation Logic always share a single source of truth.
+* **Implementation:**
+    1. Define values as a `readonly` array using `as const` in the Entity file.
+    2. Derive the Type automatically from that array.
+    3. Import the array in Use Cases for validation checks.
+
+**Example (`Task.ts`):**
+```typescript
+// 1. Define values (Runtime constant)
+export const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
+
+// 2. Derive Type (Compile-time type)
+export type Priority = typeof VALID_PRIORITIES[number];
+
+// 3. Use in Interface
+export interface Task {
+  priority: Priority;
+}
+```
+
 ## 5. Seed Data Script
 Purpose and what it creates:
 

@@ -268,8 +268,11 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
    * **Enforcement:** Use Case layer check before processing. Returns `403 Forbidden` if unauthorized.
 
 * **Assignee Constraints:**
-   * **Validity:** If provided, the Assignee ID must correspond to a valid user.
-   * **Membership:** The Assignee must be the Board Owner or a Board Member. You cannot assign a task to a user who is not part of the board.
+   * **Membership:** The Assignee must be the Board Owner or a Board Member.
+   * **Existence (Defensive Check):**
+     * **Logic:** The system performs a direct lookup against the `User` repository (`findById`) even if the user ID is found in the board's member list.
+     * **Reason:** Ensures that the assigned user account has not been deleted from the system. This guards against "stale" references where a user ID might still exist in a board's `members` array after the user document has been removed.
+     * **Error:** Throws `USER_NOT_FOUND` (404) if the user does not exist.
 
 * **Field Constraints:**
    * **Title:** Required. Must contain at least 1 non-whitespace character. Max 150 characters.
@@ -287,6 +290,13 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
 * **Update Constraints:**
    **Minimum Payload:** The request must contain at least one updatable field (`title`, `description`, `priority`, or `assignee_id`). If the payload is empty, the system throws `VAL_002` (Missing required fields).
 
+* **Update Logic Optimization (Immutable Relationships):**
+   * **Strategy:** The system intentionally **skips** validating that the task's existing `column_id` belongs to the `board_id` during an update operation.
+   * **Reasoning:** 1. The `UpdateTask` use case does not accept `column_id` as a modifiable field (Task movement is handled exclusively by the `MoveTask` use case).
+     2. The relationship between a Task, its Column, and its Board is immutable in this context.
+     3. This integrity was strictly validated during Task Creation (see Creation logic).
+   * **Benefit:** Eliminates an redundant database lookup (`ColumnRepository.findById`), reducing the latency of the update operation.
+
 ### 3.12 Order Generation Logic
 The system enforces sequential ordering (0-based index) for both Columns and Tasks to support consistent UI rendering and drag-and-drop operations.
 
@@ -302,9 +312,12 @@ The system enforces sequential ordering (0-based index) for both Columns and Tas
 
 ### 3.13 Input Sanitization Strategy
 * **Strategy:** Defensive Normalization (Defense in Depth)
-   * All string inputs (`name`, `email`, `title`, `description`, `password`) are sanitized using `(input || "").trim()` in the **Use Case layer** before processing
+   * All string inputs (`name`, `email`, `title`, `description`, `password`) are sanitized using `(input || "").trim()` in the **Use Case layer** before processing.
+   * **Optional Reference Fields (e.g., `assignee_id`):**
+     * **Logic:** If an optional reference field is provided as an empty string `""` or contains only whitespace, it is explicitly converted to `null`.
+     * **Reason:** Prevents `CastError` when Mongoose attempts to convert an empty string into an `ObjectId`. This allows the frontend to send raw form values directly without conditional logic.
    * **Reason:** Prevents runtime crashes on `undefined` values and fixes accidental whitespace insertion (common on mobile keyboards).
-   * **Special Note on Passwords:** While the system trims the *edges* of the password string to prevent login errors from invisible characters, it **strictly preserves** internal whitespace. This allows users to use secure passphrases.
+   * **Special Note on Passwords:** While the system trims the *edges* of the password string to prevent login errors from invisible characters, it **strictly preserves** internal whitespace.
    * **Lowercasing:** Email addresses are explicitly converted to lowercase in the **Use Case layer**.
       * **Reason:** Ensures business logic (like finding a user) operates on consistent data without relying solely on the database.
    * **Database Safety Net:** The Mongoose Schema also maintains `trim: true` and `lowercase: true`. This acts as a final fail-safe to guarantee data integrity even if the application layer logic is bypassed or bugged.

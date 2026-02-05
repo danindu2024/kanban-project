@@ -1,7 +1,7 @@
 import { ITaskRepository } from '../../domain/repositories/ITaskRepository';
 import { AppError } from '../../utils/AppError';
 import { ErrorCodes } from '../../constants/errorCodes';
-import { Priority } from '../../domain/entities/Task';
+import { Priority, VALID_PRIORITIES } from '../../domain/entities/Task';
 import { IColumnRepository } from '../../domain/repositories/IColumnRepository';
 import { IBoardRepository } from '../../domain/repositories/IBoardRepository';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
@@ -114,7 +114,7 @@ export class CreateTaskUseCase {
 
         // Validate priority
         const finalPriority: Priority = priority || 'low'; // priority set to low by default
-        if(!['low', 'medium', 'high'].includes(finalPriority)){
+        if (!(VALID_PRIORITIES as readonly string[]).includes(finalPriority)) {
             throw new AppError(ErrorCodes.VALIDATION_ERROR, "Priority must be 'low', 'medium', or 'high'", 400);
         }
 

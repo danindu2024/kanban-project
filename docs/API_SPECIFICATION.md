@@ -772,21 +772,25 @@ PATCH `api/tasks/:id [Auth]`
 * **Validation:** - `priority` must be one of `['low', 'medium', 'high']`.
   - `assignee_id` must be a valid user who is a **Member** of the board (or the Owner).
 
+* **Unassigning Users:**
+  To unassign a task, set `assignee_id` to `null`. For convenience (e.g., handling form inputs), the API also accepts empty strings `""` or whitespace-only strings `"  "`, which are automatically converted to `null`.
+
 * **Body:** (Any subset of fields)
-
-```JSON
-
+```json
 { 
   "title": "New Title", 
   "description": "Updated description",
   "priority": "high", 
   "assignee_id": "u5"
 }
-
 ```
 
 * **Body (Example - Unassign):**
 ```json
+{ 
+  "assignee_id": "" 
+}
+// OR
 { 
   "assignee_id": null 
 }
@@ -799,6 +803,105 @@ PATCH `api/tasks/:id [Auth]`
   "error": {
     "code": "USER_001",
     "message": "Assignee doesn't exist"
+  }
+}
+```
+
+* **Error (404 Not Found - TASK_NOT_FOUND):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TASK_001",
+    "message": "Task not found"
+  }
+}
+```
+
+* **Error (404 Not Found - BOARD_NOT_FOUND):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
+  }
+}
+```
+
+* **Error (404 Not Found - USER_NOT_FOUND):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
+* **Error (403 Forbidden - BOARD_ACCESS_DENIED):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Not Authorized"
+  }
+}
+```
+
+* **Error (400 Bad Request - Empty/onlt white space task title):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Task title cannot be empty or only white spaces"
+  }
+}
+```
+
+* **Error (400 Bad Request - Invalide priority type):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Invalid priority value"
+  }
+}
+```
+
+* **Error (400 Bad Request - Max task title length exceed):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Task title must not exceed <MAX_TASK_TITLE_LENGTH> characters"
+  }
+}
+```
+
+* **Error (400 Bad Request - Max task description length exceed):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Task description must not exceed <MAX_TASK_DESCRIPTION_LENGTH> characters"
+  }
+}
+```
+
+* **Error (400 Bad Request - MISSING_REQUIRED_FIELDS):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_002",
+    "message": "At least one field is required to update"
   }
 }
 ```

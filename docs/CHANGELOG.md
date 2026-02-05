@@ -179,3 +179,27 @@ Updated Error Codes Reference to include "violation of field length limits" as a
 #### Documentation Updates
 * **API_SPECIFICATION.md:** Finalized the `200 OK` response structure and added the `401 Unauthorized` error scenarios for the `/me` endpoint.
 * **TECHNICAL_DESIGN.md:** Documented the "User Lookup" requirement in the Error Handling Strategy to ensure consistency across all authenticated routes.
+
+---
+**Date:** February 05, 2026
+**Feature:** Task Update (`UpdateTaskUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `UpdateTaskUseCase` to handle partial updates for task details (`title`, `description`, `priority`, `assignee_id`).
+* **Unassign Logic:** Implemented specific handling for `assignee_id` where empty strings (`""`) or whitespace-only strings are automatically converted to `null`, enabling users to "unassign" tasks via standard form inputs.
+* **Validation Strategy:**
+    * **Authorization:** Strict RBAC ensuring only Board Owners, Admins, or Board Members can update tasks.
+    * **Assignee Integrity:** Validates that new assignees are valid existing users AND are members/owners of the board.
+    * **Minimum Payload:** Enforced a check to ensure at least one updateable field is provided (`VAL_002` if empty).
+* **Architecture - Single Source of Truth:** Refactored `Task` entity to use the "Tuple-to-Union" pattern for `Priority`, ensuring runtime validation arrays and compile-time types are always in sync.
+
+#### Changed
+* **Optimization:** Implemented an optimized validation flow that skips redundant "Task-to-Column-to-Board" consistency checks. The system relies on the immutable relationship established at creation, fetching only the **Board** to verify user access permissions.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Documented the "Unassign" behavior (accepting `null` or `""`).
+* **TECHNICAL_DESIGN.md:**
+    * Updated "Input Sanitization Strategy" to formally include the "Empty String to Null" conversion rule for optional reference fields.
+* **DEVELOPMENT_GUIDE.md:**
+    * Added **Section 4.4 Constants & Union Types**, documenting the "Tuple-to-Union" pattern for managing enums like `Priority`.
