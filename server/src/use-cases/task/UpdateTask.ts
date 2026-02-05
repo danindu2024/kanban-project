@@ -79,7 +79,7 @@ export class UpdateTaskUseCase {
         }
 
         // column belongs to the specific board validation deosn't happen as we are not allowing user to modifify column id. 
-        // this check is performed when ctrating the task
+        // this check is performed when creating the task
 
         // Only admin, board owner or members can update a task
         const isAdmin = user.role === 'admin'
