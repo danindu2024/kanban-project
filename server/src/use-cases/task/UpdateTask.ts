@@ -1,5 +1,5 @@
 import { ITaskRepository } from "../../domain/repositories/ITaskRepository";
-import { Priority } from "../../domain/entities/Task";
+import { Priority, VALID_PRIORITIES } from "../../domain/entities/Task";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
@@ -43,7 +43,7 @@ export class UpdateTaskUseCase {
     constructor(
         taskRepository: ITaskRepository, 
         userRepository: IUserRepository,
-        boardRepository: IBoardRepository
+        boardRepository: IBoardRepository,
     ) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
@@ -78,6 +78,9 @@ export class UpdateTaskUseCase {
             throw new AppError(ErrorCodes.BOARD_NOT_FOUND, "Board not found", 404);
         }
 
+        // column belongs to the specific board validation deosn't happen as we are not allowing user to modifify column id. 
+        // this check is performed when ctrating the task
+
         // Only admin, board owner or members can update a task
         const isAdmin = user.role === 'admin'
         const isBoardOwner = userId === board.owner_id // repository convert object id to string before passing to this layer
@@ -93,16 +96,16 @@ export class UpdateTaskUseCase {
         // title validation
         if(title !== undefined){
             // title cannot be empty
-            const sanititzedTtitle = title.trim()
-            if( sanititzedTtitle.length === 0 ){
-                throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task title cannot be empty", 400);
+            const sanitizedTitle = title.trim()
+            if( sanitizedTitle.length === 0 ){
+                throw new AppError(ErrorCodes.VALIDATION_ERROR, "Task title cannot be empty or only white spaces", 400);
             }
             // validate max length
-            if( sanititzedTtitle.length > businessRules.MAX_TASK_TITLE_LENGTH ){
+            if( sanitizedTitle.length > businessRules.MAX_TASK_TITLE_LENGTH ){
                 throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Task title must not exceed ${businessRules.MAX_TASK_TITLE_LENGTH} characters`, 400);
             }
 
-            updates.title = sanititzedTtitle
+            updates.title = sanitizedTitle
         }
         
         // validate description
@@ -117,7 +120,8 @@ export class UpdateTaskUseCase {
         
         // priority validation
         if(priority !== undefined){
-            if( !['low', 'medium', 'high'].includes(priority) ){
+            // We cast as 'readonly string[]' to allow checking against potentially invalid strings
+            if (!(VALID_PRIORITIES as readonly string[]).includes(priority)) {
                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Invalid priority value", 400);
             }
             updates.priority = priority
@@ -139,6 +143,7 @@ export class UpdateTaskUseCase {
                     throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, "Assignee must be a board member or board owner", 400);
                 }
                 // verify assignee exists
+                // catch deleted users (defensive check)
                 const isAssigneeExist = await this.userRepository.findById(finalAssigneeId)
                 if(!isAssigneeExist){
                     throw new AppError(ErrorCodes.USER_NOT_FOUND, "Assignee doesn't exist", 404)
