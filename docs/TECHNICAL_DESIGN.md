@@ -310,6 +310,18 @@ The system enforces sequential ordering (0-based index) for both Columns and Tas
    * **Mechanism:** Inside the creation transaction, the system counts existing tasks for the target column (countDocuments). This count becomes the order index for the new task.
    * **Concurrency Safety:** Relies on the Column Lock (acquired via ColumnModel.findByIdAndUpdate) to ensure no other tasks are inserted simultaneously, preventing duplicate order indices.
 
+#### Reordering Logic (Drag & Drop)
+The system supports moving items (Columns/Tasks) to arbitrary positions. The backend handles the "ripple effect" of reordering using atomic increment operations.
+
+* **Logic:**
+    * **Moving Down (Order X → Y, where Y > X):** Shift all items in the range `(X, Y]` **UP** by decrementing their order (`order - 1`).
+    * **Moving Up (Order X → Y, where Y < X):** Shift all items in the range `[Y, X)` **DOWN** by incrementing their order (`order + 1`).
+    * **Final Step:** Update the moved item's order to the target `Y`.
+
+* **Concurrency Safety:** * Executed within a Transaction.
+    * Uses `updateMany` with `$inc` to perform the shift in a single database operation per range.
+    * Target parent (Board for columns, Column for tasks) is locked to prevent concurrent reorders from corrupting the sequence.
+
 ### 3.13 Input Sanitization Strategy
 * **Strategy:** Defensive Normalization (Defense in Depth)
    * All string inputs (`name`, `email`, `title`, `description`, `password`) are sanitized using `(input || "").trim()` in the **Use Case layer** before processing.
