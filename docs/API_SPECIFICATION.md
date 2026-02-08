@@ -608,11 +608,75 @@ PATCH `api/columns/:id/order [Auth]`
 ### 4.3 Update column Details
 PATCH `api/columns/:id [Auth]`
 
+* **Permission:** Only Board Owner or Admin.
 * **Body:** `{ "title": "New Title" }`
 
+* **Response** (200 Updated):
 ```JSON
+{
+    "success": true,
+    "data": {
+        "id": "69667b960aea16b2e8ba9b61",
+        "board_id": "69667b5e0aea16b2e8ba9b5c",
+        "title": "new title",
+        "order": 0,
+        "created_at": "2026-01-13T17:06:30.751Z",
+        "updated_at": "2026-02-08T07:52:41.086Z"
+    }
+}
+```
 
-{ "board_id": "b1", "title": "New Title" }
+* **Error (403 Forbidden - Access Denied):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Only admin or board owner can update column"
+  }
+}
+```
+
+* **Error (400 Bad Request - Title Too Long)**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Column title must not exceed <MAX_COLUMN_TITLE_LENGTH> characters"
+  }
+}
+```
+
+* **Error (404 Not Found):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
+  }
+}
+```
+```json
+{
+  "success": false,
+  "error": {
+    "code": "COLUMN_001",
+    "message": "Column not found"
+  }
+}
+```
+
+* **Error (400 Bad Request - Missing Fields):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_002",
+    "message": "Title is required to update column"
+  }
+}
 ```
 
 ### 4.4 Delete Column

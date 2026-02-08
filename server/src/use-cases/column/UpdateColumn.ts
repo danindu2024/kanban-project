@@ -3,6 +3,7 @@ import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
+import { businessRules } from "../../constants/businessRules";
 
 interface UpdateColumnRequestDTO {
     userId: string;
@@ -16,6 +17,7 @@ interface UpdateColumnResponseDTO {
     title: string;
     order: number;
     created_at: Date;
+    updated_at: Date;
 }
 
 export class UpdateColumnUseCase{
@@ -34,52 +36,56 @@ export class UpdateColumnUseCase{
     }
 
     async execute({userId, columnId, title}: UpdateColumnRequestDTO): Promise<UpdateColumnResponseDTO | null> {
-        // valide user exist
-        const user = await this.userRepository.findById(userId)
+        // basic input sanitation
+        const sanitizedTitle = (title || '').trim()
+
+        // title validation
+        if(sanitizedTitle.length === 0){
+            throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, 'Title is required to update column', 400)
+        }
+        if(sanitizedTitle.length > businessRules.MAX_COLUMN_TITLE_LENGTH){
+            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Column title must not exceed ${businessRules.MAX_COLUMN_TITLE_LENGTH} characters`, 400);
+        }
+
+        // fetch user and column in parallel
+        const [user, column] = await Promise.all([
+            this.userRepository.findById(userId),
+            this.columnRepository.findById(columnId)
+        ])
+
+        // verify user exists
         if(!user){
             throw new AppError(ErrorCodes.USER_NOT_FOUND, 'User not found', 404)
         }
 
-        // validate column exists
-        const column = await this.columnRepository.findById(columnId)
+        // verify column exists
         if(!column){
             throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, 'Column not found', 404)
         }
 
-        // validate board exist
+        // verify board exists (fetch after column as it depend on column data)
         const board = await this.boardRepository.findById(column.board_id)
         if(!board){
             throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Board not found', 404)
         }
 
         // Authorization check
-        // only admin or owner can create columns
+        // only admin or owner can update columns
         const isAdmin = user.role === 'admin'
-        const isOwner = user.id == board.owner_id
+        const isOwner = user.id == board.owner_id // OID convert to string in repository
         if(!isAdmin && !isOwner){
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can update column', 403)
         }
 
-        // validate title
-        if (!title || title.trim().length === 0) {
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Title can not be empty", 400);
-        }
-        if(title.length > 50){
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Column title must not exceed 50 characters", 400);
-        }
+        const updatedColumn = await this.columnRepository.update(columnId, sanitizedTitle);
 
-        const updatedColumn = await this.columnRepository.update(columnId, title);
-
+        // defensive check to handle race condition
         if (!updatedColumn) {
             throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Column not found", 404);
         }
 
         return {
-            id: updatedColumn.id,
-            board_id: updatedColumn.board_id,
-            title: updatedColumn.title,
-            order: updatedColumn.order,
-            created_at: updatedColumn.created_at
+            ...updatedColumn
         };
     }
 }
