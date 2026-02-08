@@ -399,7 +399,8 @@ PATCH `api/boards/:id [Auth]`
     "title": "Updated Title",
     "owner_id": "u1",
     "members": ["u2"],
-    "created_at": "2025-01-15T10:30:00.000Z"
+    "created_at": "2025-01-15T10:30:00.000Z",
+    "updated_at": "2025-01-27T10:00:00.000Z"
   }
 }
 ```
@@ -410,6 +411,39 @@ PATCH `api/boards/:id [Auth]`
   "error": {
     "code": "BOARD_002",
     "message": "Only board owner or admin can update this board"
+  }
+}
+```
+
+* **Error (400 Bad Request - Missing Title):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_002",
+    "message": "Title is required to update board"
+  }
+}
+```
+
+* **Error (400 Bad Request - Title Too Long):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Board title must be less than <MAX_BOARD_TITLE_LENGTH> characters"
+  }
+}
+```
+
+* **Error (404 Not Found):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
   }
 }
 ```
