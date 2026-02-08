@@ -203,3 +203,26 @@ Updated Error Codes Reference to include "violation of field length limits" as a
     * Updated "Input Sanitization Strategy" to formally include the "Empty String to Null" conversion rule for optional reference fields.
 * **DEVELOPMENT_GUIDE.md:**
     * Added **Section 4.4 Constants & Union Types**, documenting the "Tuple-to-Union" pattern for managing enums like `Priority`.
+
+---
+**Date:** February 08, 2026
+**Feature:** Update Column (`UpdateColumnUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `UpdateColumnUseCase` to handle column renaming with strict authorization (Board Owner/Admin only).
+* **Performance Optimization:** Implemented **Parallel Execution** strategy using `Promise.all` to fetch User and Column data simultaneously, reducing latency for permission checks.
+* **Reordering Logic:** Implemented `moveColumn` in the repository using atomic `$inc` operations to handle "Shift Up/Down" logic for drag-and-drop reordering.
+
+#### Changed
+* **Validation Strategy:**
+    * **Sanitization:** Applied defensive `trim()` to column titles to prevent whitespace-only updates.
+    * **Error Handling:** Standardized "Title Too Long" errors to return `VAL_003` (Business Rule Violation) to align with API Specifications.
+* **Refactor:**
+    * Updated `ColumnRepository` comments to explicitly document transaction boundaries and concurrency safety.
+    * Standardized Response DTO to include `updated_at`.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Defined comprehensive Success (`200 OK`) and Error responses (Validation, Forbidden, Not Found) for the Update Column endpoint.
+* **TECHNICAL_DESIGN.md:**
+    * Added **Section 3.12.C**, documenting the "Shift" logic/strategy used for Column and Task reordering (Drag & Drop).
