@@ -226,3 +226,22 @@ Updated Error Codes Reference to include "violation of field length limits" as a
     * Defined comprehensive Success (`200 OK`) and Error responses (Validation, Forbidden, Not Found) for the Update Column endpoint.
 * **TECHNICAL_DESIGN.md:**
     * Added **Section 3.12.C**, documenting the "Shift" logic/strategy used for Column and Task reordering (Drag & Drop).
+
+---
+**Date:** February 08, 2026
+**Feature:** Board Update (`UpdateBoardUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `UpdateBoardUseCase` to handle board renaming with strict authorization (Board Owner/Admin only).
+* **Performance Optimization:** Implemented **Parallel Execution** strategy using `Promise.all` to fetch User and Board data simultaneously, reducing latency for permission checks.
+* **Validation Strategy:**
+    * **Sanitization:** Applied defensive `trim()` to board titles to prevent whitespace-only updates.
+    * **Single Source of Truth:** Refactored validation logic to use `businessRules` constants for title length limits, replacing hardcoded values.
+
+#### Changed
+* **Response Structure:** Updated the Board Response DTO to strictly include the `updated_at` timestamp, ensuring clients receive the most recent modification time.
+* **Error Handling:** Standardized validation errors to return `VAL_002` (Missing Fields) and `VAL_003` (Business Rule Violation) to strictly align with the API Specification.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Updated **Section 3.5** to explicitly document the `VAL_002` and `VAL_003` error scenarios for the Update Board endpoint, closing a gap between implementation and documentation.

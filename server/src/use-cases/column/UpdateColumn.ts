@@ -43,9 +43,6 @@ export class UpdateColumnUseCase{
         if(sanitizedTitle.length === 0){
             throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, 'Title is required to update column', 400)
         }
-        if(sanitizedTitle.length > businessRules.MAX_COLUMN_TITLE_LENGTH){
-            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Column title must not exceed ${businessRules.MAX_COLUMN_TITLE_LENGTH} characters`, 400);
-        }
 
         // fetch user and column in parallel
         const [user, column] = await Promise.all([
@@ -75,6 +72,11 @@ export class UpdateColumnUseCase{
         const isOwner = user.id === board.owner_id // OID convert to string in repository
         if(!isAdmin && !isOwner){
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can update column', 403)
+        }
+
+        // business rule validation
+        if(sanitizedTitle.length > businessRules.MAX_COLUMN_TITLE_LENGTH){
+            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Column title must not exceed ${businessRules.MAX_COLUMN_TITLE_LENGTH} characters`, 400);
         }
 
         const updatedColumn = await this.columnRepository.update(columnId, sanitizedTitle);

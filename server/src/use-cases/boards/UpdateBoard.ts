@@ -36,9 +36,6 @@ export class UpdateBoard{
         if(sanitizedTitle.length === 0){
             throw new AppError(ErrorCodes.MISSING_REQUIRED_FIELDS, 'Title is required to update board', 400)
         }
-        if(sanitizedTitle.length > businessRules.MAX_BOARD_TITLE_LENGTH){
-            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Title must be less than ${businessRules.MAX_BOARD_TITLE_LENGTH} characters`, 400)
-        }
 
         // fetch user, board in parallel
         const [user, board] = await Promise.all([
@@ -62,6 +59,11 @@ export class UpdateBoard{
         const isOwner = user.id === board.owner_id // OID are converted to string by repository layer
         if(!isAdmin && !isOwner){
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only board owner or admin can update board details', 403)
+        }
+
+        // business rule validation
+        if(sanitizedTitle.length > businessRules.MAX_BOARD_TITLE_LENGTH){
+            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Title must be less than ${businessRules.MAX_BOARD_TITLE_LENGTH} characters`, 400)
         }
 
         const updatedBoard = await this.boardRepository.updateBoard(boardId, sanitizedTitle)
