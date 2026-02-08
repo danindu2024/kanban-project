@@ -106,6 +106,11 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
 * **Strategy:** To bridge this gap, we use **Explicit Double Casting** (`doc as unknown as PopulatedBoardDoc`) within the Repository layer.
     * This is a necessary architectural trade-off: we manually assert the structure matches our `PopulatedBoardDoc` definition because the compiler cannot infer it automatically from the Mongoose model.
 
+* **Entity Mapping & Type Conversion:**
+    * The Repository is responsible for casting the raw Mongoose Document (with `_id`) into a clean Domain Entity.
+    * **ObjectId to String Rule:** All MongoDB `ObjectId` fields—including the primary `_id` and foreign keys (e.g., `owner_id`, `board_id`, `assignee_id`)—must be converted to **strings** before returning them to the Use Case layer.
+    * **Benefit:** Use Cases operate on pure JavaScript primitives/strings and remain completely decoupled from Mongoose/BSON data types.
+
 ## 3. Validation & Security Rules
 
 ### 3.1 Email Validation
