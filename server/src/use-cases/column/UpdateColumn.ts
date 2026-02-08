@@ -72,7 +72,7 @@ export class UpdateColumnUseCase{
         // Authorization check
         // only admin or owner can update columns
         const isAdmin = user.role === 'admin'
-        const isOwner = user.id == board.owner_id // OID convert to string in repository
+        const isOwner = user.id === board.owner_id // OID convert to string in repository
         if(!isAdmin && !isOwner){
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can update column', 403)
         }
