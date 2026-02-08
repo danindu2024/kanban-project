@@ -658,6 +658,8 @@ PATCH `api/columns/:id [Auth]`
   }
 }
 ```
+
+* **Error (404 Not Found - column not exists or deleted):**
 ```json
 {
   "success": false,
