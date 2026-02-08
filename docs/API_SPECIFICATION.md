@@ -437,13 +437,24 @@ PATCH `api/boards/:id [Auth]`
 }
 ```
 
-* **Error (404 Not Found):**
+* **Error (404 Not Found) - board not found or deleted before update:**
 ```json
 {
   "success": false,
   "error": {
     "code": "BOARD_001",
     "message": "Board not found"
+  }
+}
+```
+
+* **Error (404 Not Found) - user not found:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
   }
 }
 ```
