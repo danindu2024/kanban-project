@@ -71,6 +71,7 @@ export class ColumnRepository implements IColumnRepository {
     }
 
     async update(columnId: string, title: string): Promise<ColumnEntity | null>{
+        // no transactions needed as single document operations are atomic in mogoose
         const updatedColumn = await ColumnModel.findByIdAndUpdate(
           columnId,
           {title},
