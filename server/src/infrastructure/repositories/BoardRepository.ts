@@ -58,7 +58,7 @@ export class BoardRepository implements IBoardRepository {
     const doc = await BoardModel.findByIdAndUpdate(
       boardId, 
       { 
-      // $addToSet ensures no duplicates
+      // $addToSet ensures no duplicates. Prevent race condition of adding same member at the same time
       // $each allows pushing an array of values at once
       $addToSet: { members: { $each: members } } 
       },
