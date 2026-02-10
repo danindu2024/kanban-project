@@ -976,6 +976,15 @@ POST `api/tasks [Auth]`
 PATCH `api/tasks/:id/move [Auth]`
 
 * **Description:** Critical endpoint. Handles moving a task within the same column OR to a different column.
+* **Authorization:**
+    *   **Admin:** Can move any task.
+    *   **Board Owner:** Can move any task on their board.
+    *   **Board Member:** Can move any task on the board they are a member of.
+
+* **Behavior:**
+    *   **Same Column Move:** Reorders tasks within the column. Other tasks shift to accommodate the new position.
+    *   **Cross Column Move:** Moves task to the new column at the specified index. Tasks in the source column shift up to close the gap. Tasks in the target column shift down to make room.
+    *   **Constraint:** Cannot move a task to a column on a different board (`VALIDATION_ERROR`).
 
 * **Body:**
 
@@ -984,6 +993,39 @@ PATCH `api/tasks/:id/move [Auth]`
 {
   "target_column_id": "c2",
   "new_order_index": 0
+}
+```
+
+* **Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "message": "Task moved successfully"
+}
+```
+
+* **Error (400 Bad Request - Invalid Target):**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Cannot move task to a column on a different board"
+  }
+}
+```
+
+* **Error (400 Bad Request - Out of Bounds):**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "New order (5) must be less than or equal to last task index (4)"
+  }
 }
 ```
 
