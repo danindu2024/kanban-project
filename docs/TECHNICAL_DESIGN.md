@@ -204,15 +204,23 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
 
 #### Add Member:
 
-- User ID must exist in system (USER_001 if not)
-- User cannot already be a member (VAL_001 if duplicate)
-- Owner is automatically a member (implicit, not in array)
+- **Input Sanitization:** Duplicate user IDs are removed, and whitespace is trimmed from inputs and nul values are removed.
+- **Authorization:** Only Admin or Board Owner can add members.
+- **Validation:**
+    - Input must be a non-empty array of user IDs.
+    - User ID must exist in system (USER_001 if not).
+    - User cannot already be a member (VAL_001 if duplicate).
+    - Board Owner cannot be added as a member (VAL_003).
+    - **Board Limit:** Check if adding new members exceeds `MAX_MEMBERS_PER_BOARD`. (VAL_003 if exceeded).
+- **Concurrency:** Uses "Check-then-Act" logic. Fetch board and user data, validate, then update.
 
 #### Remove Member:
 
-- User ID must be in members array (VAL_001 if not)
-- Cannot remove board owner (VAL_001)
-- Removing last member is allowed (owner remains)
+- **Authorization:** Only Board Owner or Admin can remove members.
+- **Validation:**
+    - User ID must be in members array (VAL_001 if not).
+    - Cannot remove board owner (VAL_001).
+- Removing last member is allowed (owner remains).
 
 ### 3.9 Task Authorization Model
 
