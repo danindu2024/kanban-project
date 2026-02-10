@@ -296,3 +296,24 @@ Updated Error Codes Reference to include "violation of field length limits" as a
 * **API_SPECIFICATION.md:**
     * Added documentation for the "Empty/Whitespace only" `VAL_002` error.
     * Added documentation for the "Batch Limit Exceeded" `VAL_003` error.
+
+---
+
+**Date:** February 10, 2026
+**Feature:** Move Task (`MoveTaskUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `MoveTaskUseCase` to handle task reordering (DnD) within columns and moving tasks between columns.
+* **Concurrency Safety:**
+    * Implemented **Pessimistic Locking** via MongoDB Transactions (`session.startTransaction()`) to prevent race conditions during Move/Reorder.
+    * Uses "Shift Algorithm" with atomic `$inc` operations to maintain generic order (no gaps/duplicates).
+* **Validation Strategy:**
+    * **Authorization:** Strict RBAC ensuring only Admins, Board Owners, or Board Members can move tasks.
+    * **Boundary Checks:** Validated `newOrder` against current task counts to prevent out-of-bounds errors.
+    * **Cross-Board Prevention:** Explicitly prevented moving tasks to columns on different boards (`VALIDATION_ERROR`).
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Updated **Section 5.2** with complete Authorization rules, Behavior descriptions (Shift logic), and specific Success/Error responses.
+* **TECHNICAL_DESIGN.md:**
+    * Added **Section 3.12 Move Logic**, detailing the specific "Same Column" vs "Cross Column" shift algorithms and the Transactional/Locking strategy used.
