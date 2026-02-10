@@ -3,19 +3,24 @@ import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { User as UserEntity } from '../../domain/entities/User';
 
 export class UserRepository implements IUserRepository {
-  
+
   async findByEmail(email: string): Promise<UserEntity | null> {
     const userDoc = await UserModel.findOne({ email });
     if (!userDoc) return null;
-    
+
     return this.mapToEntity(userDoc);
   }
 
   async findById(id: string): Promise<UserEntity | null> {
     const userDoc = await UserModel.findById(id);
     if (!userDoc) return null;
-    
+
     return this.mapToEntity(userDoc);
+  }
+
+  async findByIds(ids: string[]): Promise<UserEntity[]> {
+    const userDocs = await UserModel.find({ _id: { $in: ids } });
+    return userDocs.map(doc => this.mapToEntity(doc));
   }
 
   async create(userData: {
@@ -28,7 +33,7 @@ export class UserRepository implements IUserRepository {
     // mongoDB unique constraint is enabled to handle to handle race condition
     const newUser = new UserModel(userData);
     const savedUser = await newUser.save();
-    
+
     return this.mapToEntity(savedUser);
   }
 

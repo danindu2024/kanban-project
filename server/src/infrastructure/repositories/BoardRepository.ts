@@ -55,10 +55,11 @@ export class BoardRepository implements IBoardRepository {
   }
 
   async addMembers(boardId: string, members: string[]): Promise<BoardEntity | null>{
+    // no transaction implemented as single document operations are atomic in mongoose
     const doc = await BoardModel.findByIdAndUpdate(
       boardId, 
       { 
-      // $addToSet ensures no duplicates
+      // $addToSet ensures no duplicates. Prevent race condition of adding same member at the same time
       // $each allows pushing an array of values at once
       $addToSet: { members: { $each: members } } 
       },

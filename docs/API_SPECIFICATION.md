@@ -474,18 +474,62 @@ POST `api/boards/:id/members [Auth]`
     "title": "Project Alpha",
     "owner_id": "u1",
     "members": ["u2", "u3", "u4"],
-    "created_at": "2025-01-15T10:30:00.000Z"
+    "created_at": "2025-01-15T10:30:00.000Z",
+    "updated_at": "2025-01-15T10:30:00.000Z"
   }
 }
 ```
 
-* **Error (404 Not Found - User Doesn't Exist):**
+* **Error (400 Bad Request - Missing/Invalid Inputs):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_002",
+    "message": "Members list must be an array with at least one user ID."
+  }
+}
+```
+
+* **Error (403 Forbidden - Access Denied):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Only admin or board owner can add members"
+  }
+}
+```
+
+* **Error (404 Not Found - User/Board Doesn't Exist):**
 ```json
 {
   "success": false,
   "error": {
     "code": "USER_001",
     "message": "User not found"
+  }
+}
+```
+*or*
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
+  }
+}
+```
+
+* **Error (400 Bad Request - Board Limit Exceeded):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Cannot add members. Board limit of maximum <MAX_MEMBERS_PER_BOARD> members will be exceeded"
   }
 }
 ```
@@ -497,7 +541,18 @@ POST `api/boards/:id/members [Auth]`
   "success": false,
   "error": {
     "code": "VAL_001",
-    "message": "User is already a member of this board"
+    "message": "User id <userId> is already a member of this board"
+  }
+}
+```
+
+* **Error (400 Bad Request - Board Owner cannot be added):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Board owner is a member by default"
   }
 }
 ```
