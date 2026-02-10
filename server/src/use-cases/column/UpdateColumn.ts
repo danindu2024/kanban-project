@@ -87,7 +87,12 @@ export class UpdateColumnUseCase{
         }
 
         return {
-            ...updatedColumn
+            id: updatedColumn.id,
+            board_id: updatedColumn.board_id,
+            title: updatedColumn.title,
+            order: updatedColumn.order,
+            created_at: updatedColumn.created_at,
+            updated_at: updatedColumn.updated_at
         };
     }
 }

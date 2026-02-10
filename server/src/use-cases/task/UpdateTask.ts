@@ -160,7 +160,16 @@ export class UpdateTaskUseCase {
         }
 
         return {
-            ...updatedTask
+            id: updatedTask.id,
+            column_id: updatedTask.column_id,
+            board_id: updatedTask.board_id,
+            title: updatedTask.title,
+            description: updatedTask.description,
+            priority: updatedTask.priority,
+            assignee_id: updatedTask.assignee_id,
+            order: updatedTask.order,
+            created_at: updatedTask.created_at,
+            updated_at: updatedTask.updated_at
         };
     }
 }       
