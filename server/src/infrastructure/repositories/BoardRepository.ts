@@ -70,6 +70,7 @@ export class BoardRepository implements IBoardRepository {
   }
 
   async removeMember(boardId: string, memberId: string): Promise<BoardEntity | null>{
+    // no transaction as single document operations are atomic in mongoose
     const doc = await BoardModel.findByIdAndUpdate(
       boardId,
       {$pull: {members: memberId}}, // Use $pull to remove specific item from array
