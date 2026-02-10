@@ -582,6 +582,8 @@ POST `api/boards/:id/members [Auth]`
 ### 3.7 Remove Member from Board
 DELETE `api/boards/:id/members/:userId [Auth]`
 
+* **Description:** Removes a user from the board's member list.
+* **Side Effect:** The removed user is automatically unassigned from all tasks on this board.
 * **Permission:** Only Board Owner or Admin
 * **Response (200 OK):**
 
@@ -593,7 +595,8 @@ DELETE `api/boards/:id/members/:userId [Auth]`
     "title": "Project Alpha",
     "owner_id": "u1",
     "members": ["u2"],
-    "created_at": "2025-01-15T10:30:00.000Z"
+    "created_at": "2025-01-15T10:30:00.000Z",
+    "updated_at": "2025-01-27T10:00:00.000Z"
   }
 }
 ```
@@ -620,7 +623,39 @@ DELETE `api/boards/:id/members/:userId [Auth]`
 }
 ```
 
-* **Permission:** Only the Board Owner or Admin can delete.
+* **Error (403 Forbidden - Access Denied):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Only admin or owner can remove members"
+  }
+}
+```
+
+* **Error (404 Not Found - User/Board):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
+
+* **Error (404 Not Found - Board):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
+  }
+}
+```
 
 ## 4. Columns
 ### 4.1 Create Column
