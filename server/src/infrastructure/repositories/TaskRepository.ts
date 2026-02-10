@@ -168,7 +168,7 @@ export class TaskRepository implements ITaskRepository {
         const task = await TaskModel.findById(taskId).session(session);
         // Safety against race condition: If task doesn't exist, throw error
         if (!task) {
-            throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task nor found', 404)
+            throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task not found', 404)
         }
 
         const currentColumnId = task.column_id.toString();
@@ -177,14 +177,14 @@ export class TaskRepository implements ITaskRepository {
 
         if (isSameColumn) {
             // SCENARIO A: Reordering within the SAME column
-            // order doesn't change
+            // do nothing if order doesn't change
             if(currentOrder === newOrder){
                 await session.abortTransaction()
                 session.endSession()
                 return
             }
 
-            // Implements "Shift" algorithm:
+            // Implements "Shift" algorithm if order changes:
             if (newOrder > currentOrder) {
                 // Moving DOWN: Shift items between old and new positions UP (-1)
                 await TaskModel.updateMany(
@@ -210,13 +210,19 @@ export class TaskRepository implements ITaskRepository {
             // Implements "Shift" algorithm:
             // Make room in the TARGET column : Shift items >= newOrder DOWN(+1)
             await TaskModel.updateMany(
-                { column_id: targetColumnId, order: { $gte: newOrder } },
+                { 
+                    column_id: targetColumnId, 
+                    order: { $gte: newOrder } 
+                },
                 { $inc: { order: 1 } }
             ).session(session);
 
             // Close the gap in the SOURCE column: Shift items < currentOrder UP(-1)
             await TaskModel.updateMany(
-                { column_id: currentColumnId, order: { $gt: currentOrder } },
+                { 
+                    column_id: currentColumnId, 
+                    order: { $gt: currentOrder } 
+                },
                 { $inc: { order: -1 } }
             ).session(session);
         }
