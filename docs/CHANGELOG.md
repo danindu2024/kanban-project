@@ -4,6 +4,28 @@ All notable changes to the FlowState project documentation and implementation.
 
 ## [Sprint 1] - 2025-01-19
 
+---
+**Date:** February 10, 2026
+**Feature:** Remove Member (`RemoveMemberUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `RemoveMemberUseCase` to allow Board Owners and Admins to remove members from a board.
+* **Cleanup Logic:** Implemented side-effect where removing a member automatically unassigns them from all tasks on that board to prevent "ghost assignments".
+* **Validation Strategy:**
+    * **Authorization:** Strict RBAC ensuring only Board Owners or Admins can remove members.
+    * **Safety Checks:** prevented removing the Board Owner (`VAL_001`).
+    * **Membership Verification:** Validated that the target user is actually a member of the board before removal.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Documented the `DELETE /api/boards/:id/members/:userId` endpoint.
+    * Explicitly noted the task unassignment side effect.
+* **TECHNICAL_DESIGN.md:**
+    * Added **Section 4. Deferred Features**, explicitly deferring "Leave Board" (self-removal) and "Board Deletion" to Sprint 2+.
+    * Documented the non-atomic nature of the "Remove Member + Unassign Task" operation as an accepted MVP risk.
+
+---
+
 ### Security Enhancements
 - **Email Validation:** Upgraded regex to RFC-compliant pattern
 - **JWT Secret:** Added minimum 32-character length validation at startup

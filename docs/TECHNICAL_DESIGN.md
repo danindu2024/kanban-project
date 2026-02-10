@@ -213,14 +213,21 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
     - Board Owner cannot be added as a member (VAL_003).
     - **Board Limit:** Check if adding new members exceeds `MAX_MEMBERS_PER_BOARD`. (VAL_003 if exceeded).
 - **Concurrency:** Uses "Check-then-Act" logic. Fetch board and user data, validate, then update.
-
-#### Remove Member:
-
+ 
+ #### Remove Member:
+ 
 - **Authorization:** Only Board Owner or Admin can remove members.
 - **Validation:**
     - User ID must be in members array (VAL_001 if not).
     - Cannot remove board owner (VAL_001).
+- **Cleanup (Side Effect):**
+    - **Task Unassignment:** Removing a member *automatically* unassigns them from all tasks on that board (`assignee_id` set to `null`).
+    - **Consistency:** Ensures no "ghost assignments" remain pointing to users who no longer have access to the board.
+- **Concurrency:**
+    - **Atomicity:** The operation is **NOT** atomic in Sprint 1 (Member removal and Task unassignment are separate DB calls).
+    - **Risk:** Small window where user is removed but still assigned to tasks if server crashes between operations. Accepted risk for MVP.
 - Removing last member is allowed (owner remains).
+
 
 ### 3.9 Task Authorization Model
 
@@ -369,3 +376,20 @@ The system supports moving items (Columns/Tasks) to arbitrary positions. The bac
    * **Max:** 5 requests per IP
    * **Message:** "Too many login/registration attempts, please try again later."
    * **Rationale:** Mitigates brute-force attacks on user passwords and prevents bot-driven database bloat.
+
+## 4. Deferred Features (Sprint 2+)
+
+The following features are explicitly out of scope for Sprint 1 (MVP) to prioritize core functionality:
+
+1.  **Leave Board:**
+    *   **Decision:** Users cannot voluntarily leave a board. They must ask an Admin/Owner to remove them.
+    *   **Rationale:** Simplifies authorization logic and UI. Manual removal covers the use case for small teams.
+    *   **Impact:** No self-service "Exit" button in UI.
+
+2.  **Board Deletion:**
+    *   **Decision:** Boards cannot be deleted via UI.
+    *   **Rationale:** Prevents accidental data loss during MVP phase.
+
+3.  **Pagination:**
+    *   **Decision:** All lists (Boards, Tasks) return full datasets.
+    *   **Rationale:** Assumption of low volume for MVP. Simpler frontend implementation.
