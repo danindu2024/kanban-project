@@ -245,3 +245,32 @@ Updated Error Codes Reference to include "violation of field length limits" as a
 #### Documentation Updates
 * **API_SPECIFICATION.md:**
     * Updated **Section 3.5** to explicitly document the `VAL_002` and `VAL_003` error scenarios for the Update Board endpoint, closing a gap between implementation and documentation.
+
+---
+
+**Date:** February 10, 2026
+**Feature:** Add Board Member (`AddMembersUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `AddMembersUseCase` to allow Board Owners and Admins to add new members to a board.
+* **Validation Strategy:**
+    * **Batch Limit:** Enforced a maximum limit on the number of members that can be added in a single request (`VAL_003` if exceeded), preventing DoS attacks.
+    * **Board Limit:** Checked if the total number of members (existing + new) exceeds `MAX_MEMBERS_PER_BOARD`.
+    * **Sanitization:** Applied defensive sanitization (trimming, null removal, deduplication) to the input array.
+    * **Existence Checks:** Validated that both the Board and all Target Users exist (`USER_001` or `BOARD_001` if not found).
+    * **Membership Integrity:**
+        * Prevented adding the Board Owner as a member (`VAL_003`).
+        * Prevented adding users who are already members (`VAL_001`).
+* **Concurrency Safety:**
+    * **Defensive Check:** Implemented a final "Check-then-Act" verification to ensure the board still exists before committing the update.
+
+#### Changed
+* **Response Structure:** Updated `AddMemberResponseDTO` to include `updated_at` timestamp, ensuring clients receive the most recent modification time.
+* **Error Handling:**
+    * Added specific `VAL_002` error for "Whitespace-only/Empty" member input after sanitization.
+    * Standardized error messages to align with API Specification.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Added documentation for the "Empty/Whitespace only" `VAL_002` error.
+    * Added documentation for the "Batch Limit Exceeded" `VAL_003` error.
