@@ -55,6 +55,7 @@ export class BoardRepository implements IBoardRepository {
   }
 
   async addMembers(boardId: string, members: string[]): Promise<BoardEntity | null>{
+    // no transaction implemented as single document operations are atomic in mongoose
     const doc = await BoardModel.findByIdAndUpdate(
       boardId, 
       { 
