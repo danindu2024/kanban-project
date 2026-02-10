@@ -74,7 +74,12 @@ export class UpdateBoard{
         }
 
         return{
-            ...updatedBoard
+            id: updatedBoard.id,
+            title: updatedBoard.title,
+            owner_id: updatedBoard.owner_id,
+            members: updatedBoard.members,
+            created_at: updatedBoard.created_at,
+            updated_at: updatedBoard.updated_at
         }
     }
 }

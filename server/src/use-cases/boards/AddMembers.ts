@@ -30,13 +30,21 @@ export class AddMembers {
 
     async execute({ boardId, members, userId }: AddMemberRequestDTO): Promise<AddMemberResponseDTO> {
         // Ensure input provided and is an array
-        // should I put a member limit, array size limit
         if (!members || !Array.isArray(members) || members.length === 0) {
             throw new AppError(
                 ErrorCodes.MISSING_REQUIRED_FIELDS,
                 "Members list must be an array with at least one user ID.",
                 400
             );
+        }
+
+        // Member array size validation
+        if (members.length > businessRules.MAX_MEMBERS_PER_BATCH) {
+            throw new AppError(
+                ErrorCodes.BUSINESS_RULE_VIOLATION,
+                `Can only add maximum of ${businessRules.MAX_MEMBERS_PER_BATCH} members at a time`,
+                400
+            )
         }
 
         // basic input sanitization
@@ -70,19 +78,9 @@ export class AddMembers {
         // Authorization check
         // only admin or owner can add members
         const isAdmin = user.role === 'admin'
-        const isOwner = user.id == board.owner_id // OID are coverted to string by repository layer
+        const isOwner = user.id === board.owner_id // OID are coverted to string by repository layer
         if (!isAdmin && !isOwner) {
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can add members', 403)
-        }
-
-        // validate members exists
-        // Check if adding new members exceeds the board limit
-        if (board.members.length + sanitizedMembers.length > businessRules.MAX_MEMBERS_PER_BOARD) {
-            throw new AppError(
-                ErrorCodes.BUSINESS_RULE_VIOLATION,
-                `Cannot add members. Board limit of maximum ${businessRules.MAX_MEMBERS_PER_BOARD} members will be exceeded`,
-                400
-            )
         }
 
         // Create a Set for O(1) lookup of existing members
@@ -112,15 +110,29 @@ export class AddMembers {
             }
         }
 
+        // Check if adding new members exceeds the board limit
+        if (board.members.length + sanitizedMembers.length > businessRules.MAX_MEMBERS_PER_BOARD) {
+            throw new AppError(
+                ErrorCodes.BUSINESS_RULE_VIOLATION,
+                `Cannot add members. Board limit of maximum ${businessRules.MAX_MEMBERS_PER_BOARD} members will be exceeded`,
+                400
+            )
+        }
+
         const updatedBoard = await this.boardRepository.addMembers(boardId, sanitizedMembers)
 
-        // defensive check to prevent race condition - delete task before update happens
+        // defensive check to prevent race condition - delete board before update happens
         if (!updatedBoard) {
-            throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Request failed. Board not found', 404)
+            throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Board not found', 404)
         }
 
         return {
-            ...updatedBoard
+            id: updatedBoard.id,
+            title: updatedBoard.title,
+            owner_id: updatedBoard.owner_id,
+            members: updatedBoard.members,
+            created_at: updatedBoard.created_at,
+            updated_at: updatedBoard.updated_at
         }
     }
 }

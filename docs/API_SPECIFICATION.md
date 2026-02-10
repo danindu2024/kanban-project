@@ -491,6 +491,17 @@ POST `api/boards/:id/members [Auth]`
 }
 ```
 
+* **Error (400 Bad Request - Empty/ white space only input):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_002",
+    "message": "Members list must contain at least one valid user ID"
+  }
+}
+```
+
 * **Error (403 Forbidden - Access Denied):**
 ```json
 {
@@ -530,6 +541,17 @@ POST `api/boards/:id/members [Auth]`
   "error": {
     "code": "VAL_003",
     "message": "Cannot add members. Board limit of maximum <MAX_MEMBERS_PER_BOARD> members will be exceeded"
+  }
+}
+```
+
+* **Error (400 Bad Request - Member array size exceeded):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Can only add maximum of <MAX_MEMBERS_PER_BATCH> members at a time"
   }
 }
 ```
