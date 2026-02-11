@@ -317,3 +317,24 @@ Updated Error Codes Reference to include "violation of field length limits" as a
     * Updated **Section 5.2** with complete Authorization rules, Behavior descriptions (Shift logic), and specific Success/Error responses.
 * **TECHNICAL_DESIGN.md:**
     * Added **Section 3.12 Move Logic**, detailing the specific "Same Column" vs "Cross Column" shift algorithms and the Transactional/Locking strategy used.
+
+---
+
+**Date:** February 11, 2026
+**Feature:** Move Column (`MoveColumnUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `MoveColumnUseCase` to handle column reordering via drag-and-drop.
+* **Concurrency Safety:**
+    * Implemented **Pessimistic Locking** via MongoDB Transactions (`session.startTransaction()`) to prevent race conditions during Move/Reorder.
+    * Uses "Shift Algorithm" with atomic `$inc` operations to maintain generic order (no gaps/duplicates).
+* **Validation Strategy:**
+    * **Authorization:** Strict RBAC ensuring only Admins or Board Owners can move columns.
+    * **Boundary Checks:** explicit boundary checks (`newOrder` <= `columnCount`) performed **inside the repository transaction** to guarantee data integrity against concurrent modifications.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Updated **Section 4.2** with complete Authorization rules, Behavior descriptions (Shift logic), and specific Success/Error responses.
+    * Explicitly documented the shifting behavior (Up/Down) for reordering.
+* **TECHNICAL_DESIGN.md:**
+    * Updated **Section 3.12** to explicitly mention that boundary checks for move operations occur within the repository transaction.
