@@ -21,15 +21,20 @@ export class DeleteTaskUseCase {
     }
 
     async execute({taskId, userId}: DeleteTaskRequestDTO): Promise<void> {
+        // task id is send through url. Invalid ids throw cast error
+
         // Fetch independent data in parallel (User and Task)
         const [user, task] = await Promise.all([
             this.userRepository.findById(userId),
             this.taskRepository.findById(taskId)
         ]);
 
+        // validate user exists
         if (!user) {
             throw new AppError(ErrorCodes.USER_NOT_FOUND, "User not found", 404);
         }
+
+        // validate task exists
         if (!task) {
             throw new AppError(ErrorCodes.TASK_NOT_FOUND, "Task not found", 404);
         }
@@ -42,7 +47,7 @@ export class DeleteTaskUseCase {
 
         // Only admin or board owner can delete a task
         const isAdmin = user.role === 'admin'
-        const isBoardOwner = user.id.toString() === board.owner_id.toString()
+        const isBoardOwner = user.id === board.owner_id // OIDs are converted to string by repository layer
 
         if(!isAdmin && !isBoardOwner){
             throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Not Authorized', 403)
@@ -50,6 +55,8 @@ export class DeleteTaskUseCase {
 
         // repository handle the reordering of remaining tasks
         const isDeleted = await this.taskRepository.delete(taskId);
+
+        // safety against race condition
         if (!isDeleted) {
             throw new AppError(ErrorCodes.TASK_NOT_FOUND, `task not found`, 404);
         }
