@@ -217,6 +217,19 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
 - **Board Deletion:** Only board owner or admin can delete
 - **Implementation:** Authorization enforced via use case layer checks
 
+* **Delete Board Validation Flow:**
+    *   **Step 1: Parallel Fetch (Optimization):** The system fetches the `User` (requester) and the `Board` (target) simultaneously.
+    *   **Step 2: Existence Checks:**
+        *   If User is missing -> `USER_NOT_FOUND (404)`
+        *   If Board is missing -> `BOARD_NOT_FOUND (404)`
+    *   **Step 3: Integrity Check:**
+        *   Verify Board is empty (no columns).
+        *   If not empty -> `VAL_003` ("Cannot delete board with existing columns").
+    *   **Step 4: Authorization:**
+        *   Check if Requester is `Admin` OR `Board Owner`.
+        *   If neither -> `BOARD_ACCESS_DENIED (403)`.
+    *   **Step 5: Execution:** Proceed to `BoardRepository.delete` (Single document delete).
+
 ### 3.8 Member Management Rules
 
 #### Add Member:

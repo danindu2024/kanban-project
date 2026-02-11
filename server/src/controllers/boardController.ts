@@ -72,10 +72,10 @@ export class BoardController {
       const boardId = req.params.id
       const userId = req.user!.id
 
-      await this.deleteBoardUseCase.execute(boardId, userId)
+      await this.deleteBoardUseCase.execute({boardId, userId})
       res.status(200).json({
         success: true,
-        message: 'Board Deleted successfully'
+        message: 'Board deleted successfully'
       })
     }catch(error){
       next(error)

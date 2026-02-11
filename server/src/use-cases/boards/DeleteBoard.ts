@@ -3,6 +3,11 @@ import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
 
+interface DeleteBoardRequestDTO{
+    userId: string;
+    boardId: string;
+}
+
 export class DeleteBoard{
     private boardRepository: IBoardRepository;
     private userRepository: IUserRepository;
@@ -12,28 +17,33 @@ export class DeleteBoard{
         this.userRepository = userRepository;
     };
 
-    async execute(boardId: string, userId: string): Promise<void>{
+    async execute({boardId, userId}: DeleteBoardRequestDTO): Promise<void>{
+        // fetch user and board in parallel
+        const [user, board] = await Promise.all([
+            this.userRepository.findById(userId),
+            this.boardRepository.findById(boardId)
+        ]);
+
         // validate user exist
-        const user = await this.userRepository.findById(userId);
         if(!user){
             throw new AppError(ErrorCodes.USER_NOT_FOUND, 'User Not Found', 404);
         };
 
         // validate board exist
-        const board = await this.boardRepository.findById(boardId);
         if(!board){
             throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Board Not Found', 404);
         };
 
         // only admin or board owner can delete the board
         const isAdmin = user.role === 'admin';
-        const isOwner = user.id.toString() === board.owner_id.toString();
+        const isOwner = user.id === board.owner_id // OIDs are converted to string by repository layer
         if(!isAdmin && !isOwner){
-            throw new AppError(ErrorCodes.NOT_AUTHORIZED, 'Not Authorized', 403);
+            throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Not Authorized', 403);
         };
 
         const isDeleted = await this.boardRepository.delete(boardId);
 
+        // safety check to prevent race condition
         if(!isDeleted){
             throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Board Not Found', 404)
         }
