@@ -1,5 +1,5 @@
 import { IColumnRepository } from '../../domain/repositories/IColumnRepository';
-import { Column as ColumnEntity} from '../../domain/entities/Column';
+import { Column as ColumnEntity } from '../../domain/entities/Column';
 import ColumnModel, { IColumnDocument } from '../models/ColumnSchema';
 import BoardModel from '../models/BoardSchema';
 import TaskModel from '../models/TaskSchema';
@@ -10,100 +10,100 @@ import { businessRules } from '../../constants/businessRules';
 
 export class ColumnRepository implements IColumnRepository {
 
-    async create(columnData: 
-        { 
-            board_id: string; 
-            title: string; 
+    async create(columnData:
+        {
+            board_id: string;
+            title: string;
         }
-    ) : Promise<ColumnEntity>{
-        
+    ): Promise<ColumnEntity> {
+
         const session = await mongoose.startSession()
 
-        try{
+        try {
             // start transaction
             session.startTransaction()
-            
+
             // add Mutex lock for board to prevent race condition
             const board = await BoardModel.findByIdAndUpdate(
                 columnData.board_id,
-                {$set: {updated_at: new Date()}}
+                { $set: { updated_at: new Date() } }
             ).session(session)
 
-            if(!board){
+            if (!board) {
                 throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Board not found', 404)
             }
 
             // get the column count of the board
             const columnCount = await ColumnModel.countDocuments(
-                {board_id: columnData.board_id}).session(session)
+                { board_id: columnData.board_id }).session(session)
 
             // Maximum column count per board is <MAX_COLUMNS_PER_BOARD>
-            if(columnCount >= businessRules.MAX_COLUMNS_PER_BOARD){
+            if (columnCount >= businessRules.MAX_COLUMNS_PER_BOARD) {
                 throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Can't create new column. Maximum limit(${businessRules.MAX_COLUMNS_PER_BOARD}) exceeded`)
             }
 
             // create column
             const newColumn = new ColumnModel(
                 {
-                    ...columnData, 
+                    ...columnData,
                     order: columnCount // current column count equal the new column order (0 based index)
                 }
             )
 
-            const savedColumn = await newColumn.save({session})
+            const savedColumn = await newColumn.save({ session })
 
             await session.commitTransaction()
             return this.mapToEntity(savedColumn)
-        }catch(error){
+        } catch (error) {
             await session.abortTransaction()
             throw error
-        }finally{
+        } finally {
             session.endSession()
         }
     }
 
     async findByBoardId(boardId: string): Promise<ColumnEntity[]> {
         const columnDocs = await ColumnModel
-          .find({board_id: boardId})
-          .sort({ order: 1 });
+            .find({ board_id: boardId })
+            .sort({ order: 1 });
 
         return columnDocs.map(doc => this.mapToEntity(doc));
     }
 
-    async update(columnId: string, title: string): Promise<ColumnEntity | null>{
+    async update(columnId: string, title: string): Promise<ColumnEntity | null> {
         // no transactions needed as single document operations are atomic in mogoose
         const updatedColumn = await ColumnModel.findByIdAndUpdate(
-          columnId,
-          {title},
-          { new: true, runValidators: true }
+            columnId,
+            { title },
+            { new: true, runValidators: true }
         );
         return updatedColumn ? this.mapToEntity(updatedColumn) : null;
     }
 
-    async  findById(id: string): Promise<ColumnEntity | null>{
-        const columnDoc =  await ColumnModel.findById(id);
+    async findById(id: string): Promise<ColumnEntity | null> {
+        const columnDoc = await ColumnModel.findById(id);
         return columnDoc ? this.mapToEntity(columnDoc) : null;
     }
 
-    async delete(id: string): Promise<Boolean>{
+    async delete(id: string): Promise<Boolean> {
         const session = await mongoose.startSession()
         session.startTransaction()
-        try{
+        try {
             // fetch column
             const column = await ColumnModel.findById(id).session(session)
-            if(!column){
+            if (!column) {
                 throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, "Column not found", 404)
             }
 
             // check tasks exists
-            const tasksCount = await TaskModel.countDocuments({column_id: id}).session(session)
-            
+            const tasksCount = await TaskModel.countDocuments({ column_id: id }).session(session)
+
             // Can't delete column with existing tasks
-            if(tasksCount > 0){
+            if (tasksCount > 0) {
                 throw new AppError(ErrorCodes.VALIDATION_ERROR, "Cannot delete column with existing tasks", 400)
             }
 
-            const deleteResult = await ColumnModel.deleteOne({_id: id}).session(session)
+            const deleteResult = await ColumnModel.deleteOne({ _id: id }).session(session)
 
             if (deleteResult.deletedCount === 0) {
                 // This is safe because we return immediately and never hit the catch block
@@ -114,92 +114,95 @@ export class ColumnRepository implements IColumnRepository {
             // reorder remaining columns
             await ColumnModel.updateMany(
                 {
-                    board_id:  column.board_id,
-                    order: {$gt: column.order}
+                    board_id: column.board_id,
+                    order: { $gt: column.order }
                 },
-                {$inc: {order: -1}}
+                { $inc: { order: -1 } }
             ).session(session)
 
             await session.commitTransaction()
             return true
 
-        }catch(error){
-            if(session.inTransaction()){
+        } catch (error) {
+            if (session.inTransaction()) {
                 await session.abortTransaction()
             }
             throw error
-        }finally{
+        } finally {
             await session.endSession()
         }
     }
 
-    async moveColumn(id: string, newOrder: number): Promise<void>{
-     const session = await mongoose.startSession();
-      session.startTransaction();
-  
-      try {
-        // Fetch the column to check its current location
-        const column = await ColumnModel.findById(id).session(session);
-        if (!column) {
-            throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, 'Column not found', 404);
-        }
+    async moveColumn(id: string, newOrder: number): Promise<void> {
+        const session = await mongoose.startSession();
+        session.startTransaction();
 
-        const currentOrder = column.order;
-        
-        // Do nothing if the order hasn't changed
-        if (newOrder === currentOrder) {
-             await session.abortTransaction();
-             session.endSession();
-             return;
-        }
+        try {
+            // Fetch the column to check its current location
+            const column = await ColumnModel.findById(id).session(session);
+            if (!column) {
+                throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, 'Column not found', 404);
+            }
 
-        if (newOrder > currentOrder) {
-            // Moving DOWN: Shift items in range (0, 2] UP (-1)
-            await ColumnModel.updateMany(
-                {
-                    board_id: column.board_id, // Only affect this board
-                    order: { $gt: currentOrder, $lte: newOrder }
-                },
-                { $inc: { order: -1 } }
+            const currentOrder = column.order;
+
+            // Do nothing if the order hasn't changed
+            if (newOrder === currentOrder) {
+                await session.abortTransaction();
+                session.endSession();
+                return;
+            }
+
+            // boundary check
+            const columnCount = await ColumnModel.countDocuments({ board_id: column.board_id }).session(session);
+            const maxAllowedOrder = columnCount - 1;
+            if (newOrder > maxAllowedOrder) {
+                throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `New order (${newOrder}) exceeds last column index (${maxAllowedOrder})`, 400);
+            }
+
+            if (newOrder > currentOrder) {
+                // Moving DOWN: Shift items in range (0, 2] UP (-1)
+                await ColumnModel.updateMany(
+                    {
+                        board_id: column.board_id, // Only affect this board
+                        order: { $gt: currentOrder, $lte: newOrder }
+                    },
+                    { $inc: { order: -1 } }
+                ).session(session);
+            } else {
+                // Moving UP: Shift items in range [0, 2) DOWN (+1)
+                await ColumnModel.updateMany(
+                    {
+                        board_id: column.board_id, // Only affect this board
+                        order: { $gte: newOrder, $lt: currentOrder }
+                    },
+                    { $inc: { order: 1 } }
+                ).session(session);
+            }
+
+            // Finally, move the column itself to the target position
+            await ColumnModel.findByIdAndUpdate(
+                id,
+                { order: newOrder }
             ).session(session);
-        } else {
-            // Moving UP: Shift items in range [0, 2) DOWN (+1)
-            await ColumnModel.updateMany(
-                {
-                    board_id: column.board_id, // Only affect this board
-                    order: { $gte: newOrder, $lt: currentOrder }
-                },
-                { $inc: { order: 1 } }
-            ).session(session);
+
+            await session.commitTransaction();
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
         }
-
-        // Finally, move the column itself to the target position
-        await ColumnModel.findByIdAndUpdate(
-            id,
-            { order: newOrder }
-        ).session(session);
-
-        await session.commitTransaction();
-      } catch (error) {
-          await session.abortTransaction();
-          throw error;
-      } finally {
-          session.endSession();
-      }
-    }
-
-    async countColumn(boardId: string): Promise<number>{
-        return await ColumnModel.countDocuments({board_id: boardId})
     }
 
     private mapToEntity(doc: IColumnDocument): ColumnEntity {
         return {
-          id: doc._id.toString(),
-          board_id: doc.board_id.toString(),
-          title: doc.title,
-          order: doc.order,
-          created_at: doc.created_at,
-          updated_at: doc.updated_at
+            id: doc._id.toString(),
+            board_id: doc.board_id.toString(),
+            title: doc.title,
+            order: doc.order,
+            created_at: doc.created_at,
+            updated_at: doc.updated_at
         }
     }
 }
