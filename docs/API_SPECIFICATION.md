@@ -384,6 +384,62 @@ GET `api/boards/:id [Auth]`
 ### 3.4 Delete Board
 DELETE `api/boards/:id [Auth]`
 
+* **Description:** Deletes a board.
+* **Permission:** Only Board Owner or Admin.
+* **Constraint:** Board must be empty (no columns).
+
+* **Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Board deleted successfully"
+}
+```
+
+* **Error (400 Bad Request - Not Empty):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Cannot delete board with existing columns"
+  }
+}
+```
+
+* **Error (403 Forbidden):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Not Authorized"
+  }
+} 
+```
+
+* **Error (404 Not Found - Board):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
+  }
+}
+```
+
+* **Error (404 Not Found - User):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
 ### 3.5 Update Board
 PATCH `api/boards/:id [Auth]`
 
