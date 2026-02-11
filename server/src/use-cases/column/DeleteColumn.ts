@@ -25,6 +25,8 @@ export class DeleteColumnUseCase{
     }
 
     async execute({userId, columnId}: DeleteColumnRequestDTO): Promise<void>{
+        // column id is send through url. Invalid ids throw cast error
+
         // Fetch independent data in parallel
         const [user, column] = await Promise.all([
             this.userRepository.findById(userId),
@@ -49,9 +51,9 @@ export class DeleteColumnUseCase{
         // Authorization check
         // only admin or owner can delete columns
         const isAdmin = user.role === 'admin'
-        const isOwner = user.id.toString() == board.owner_id.toString()
+        const isOwner = user.id === board.owner_id // OIDs are converted to string by repository layer
         if(!isAdmin && !isOwner){
-            throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can delete column', 403)
+            throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Not Authorized', 403)
         }
 
         const isDelete = await this.columnRepository.delete(columnId)
