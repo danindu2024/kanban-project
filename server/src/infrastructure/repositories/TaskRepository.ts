@@ -119,7 +119,7 @@ export class TaskRepository implements ITaskRepository {
 
         // Safety against race condition: If task doesn't exist, throw error
         if (!task) {
-            throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task nor found', 404)
+            throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task not found', 404)
         }
 
         const currentOrder = task.order
@@ -135,8 +135,9 @@ export class TaskRepository implements ITaskRepository {
 
         // close the gap of deleted item
         await TaskModel.updateMany(
-            {column_id: currentColumnId,
-            order: {$gt: currentOrder}
+            {
+                column_id: currentColumnId,
+                order: {$gt: currentOrder}
             },
             {$inc: {order: -1}}
         ).session(session)
