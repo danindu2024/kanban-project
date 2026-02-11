@@ -175,6 +175,27 @@ export class TaskRepository implements ITaskRepository {
         const isSameColumn = currentColumnId === targetColumnId;
         const currentOrder = task.order
 
+        // Get last task index
+        const taskCount = isSameColumn 
+            ? await TaskModel.countDocuments({column_id: task.column_id}).session(session) // Fetch from source column if same
+            : await TaskModel.countDocuments({column_id: targetColumnId}).session(session); // Fetch from target column if different
+
+        const maxAllowedOrder = isSameColumn ? taskCount - 1 : taskCount;
+
+        // check if max tasks per column is reached
+        if(maxAllowedOrder+1 > businessRules.MAX_TASKS_PER_COLUMN){ // order + 1 = total tasks
+            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Maximum tasks per column ${businessRules.MAX_TASKS_PER_COLUMN} reached`, 400)
+        }
+
+        // new order must be less than last task index
+        if (newOrder > maxAllowedOrder) {
+            throw new AppError(
+                ErrorCodes.BUSINESS_RULE_VIOLATION, 
+                `New order (${newOrder}) must be less than or equal to last task index (${maxAllowedOrder})`, 
+                400
+            );
+        }
+
         if (isSameColumn) {
             // SCENARIO A: Reordering within the SAME column
             // do nothing if order doesn't change

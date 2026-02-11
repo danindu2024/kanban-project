@@ -4,7 +4,6 @@ import { ErrorCodes } from "../../constants/errorCodes";
 import { IColumnRepository } from "../../domain/repositories/IColumnRepository";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
-import { businessRules } from "../../constants/businessRules";
 
 interface MoveTaskRequestDTO {
     targetColumnId: string;
@@ -77,34 +76,13 @@ export class MoveTaskUseCase {
         // Ensure the target column belongs to the same board
         if (task.board_id !== targetColumn.board_id) {
             throw new AppError(
-                ErrorCodes.VALIDATION_ERROR, 
+                ErrorCodes.BOARD_ACCESS_DENIED, 
                 "Cannot move task to a column on a different board", 
-                400
-            );
-        }
-
-        // Get last task index
-        const isSameColumn = task.column_id === targetColumnId;
-        const taskCount = isSameColumn 
-            ? await this.taskRepository.countTasks(task.column_id) // Fetch from source column if same
-            : await this.taskRepository.countTasks(targetColumnId); // Fetch from target column if different
-
-        const maxAllowedOrder = isSameColumn ? taskCount - 1 : taskCount;
-
-        // check if max tasks per column is reached
-        if(maxAllowedOrder+1 > businessRules.MAX_TASKS_PER_COLUMN){ // order + 1 = total tasks
-            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Maximum tasks per column ${businessRules.MAX_TASKS_PER_COLUMN} reached`, 400)
-        }
-
-        // new order must be less than last task index
-        if (newOrder > maxAllowedOrder) {
-            throw new AppError(
-                ErrorCodes.BUSINESS_RULE_VIOLATION, 
-                `New order (${newOrder}) must be less than or equal to last task index (${maxAllowedOrder})`, 
-                400
+                403
             );
         }
         
+        // move task (boundary check happens inside the repository transaction)
         await this.taskRepository.moveTask(taskId, targetColumnId, newOrder);
     }
 }
