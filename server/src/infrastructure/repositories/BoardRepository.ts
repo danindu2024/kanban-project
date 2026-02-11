@@ -1,6 +1,7 @@
 import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
 import { Board as BoardEntity, PopulatedBoard as PopulatedBoardEntity} from "../../domain/entities/Board";
 import BoardModel, {IBoardDocument } from "../models/BoardSchema";
+import ColumnModel from "../models/ColumnSchema";
 import { businessRules } from "../../constants/businessRules";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
@@ -50,6 +51,14 @@ export class BoardRepository implements IBoardRepository {
   }
 
   async delete(id: string): Promise<Boolean>{
+    // no transactions as single document operations are atomic in mongoose
+    // there is a safety check in the use case to prevent race condition
+
+    // can't delete board with existing columns
+    const columnCount = await ColumnModel.countDocuments({board_id: id})
+    if(columnCount > 0){
+      throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, 'Cannot delete board with existing columns')
+    }
     const result = await BoardModel.deleteOne({_id: id})
     return result.deletedCount > 0;
   }
