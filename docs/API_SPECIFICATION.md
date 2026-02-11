@@ -897,6 +897,7 @@ PATCH `api/columns/:id [Auth]`
 DELETE `api/columns/:id [Auth]`
 
 * **Description:** Deletes a column.
+* **Permission:** RESTRICTED. Only Board Owner or Admin can delete columns.
 * **Constraint:** Column must be empty (no tasks).
 
 * **Response (200 OK):**
@@ -914,7 +915,51 @@ DELETE `api/columns/:id [Auth]`
   "success": false,
   "error": {
     "code": "VAL_003",
-    "message": "Cannot delete column with existing tasks. Please move or delete them first."
+    "message": "Cannot delete column with existing tasks"
+  }
+}
+```
+
+* **Error (403 Forbidden):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Not Authorized"
+  }
+} 
+```
+
+* **Error (404 Not Found - Column):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "COLUMN_001",
+    "message": "Column not found"
+  }
+}
+```
+
+* **Error (404 Not Found - User):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
+* **Error (404 Not Found - Board):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
   }
 }
 ```

@@ -100,13 +100,13 @@ export class ColumnRepository implements IColumnRepository {
 
             // Can't delete column with existing tasks
             if (tasksCount > 0) {
-                throw new AppError(ErrorCodes.VALIDATION_ERROR, "Cannot delete column with existing tasks", 400)
+                throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, "Cannot delete column with existing tasks", 400)
             }
 
             const deleteResult = await ColumnModel.deleteOne({ _id: id }).session(session)
 
+            // if not deleted abort transaction
             if (deleteResult.deletedCount === 0) {
-                // This is safe because we return immediately and never hit the catch block
                 await session.abortTransaction();
                 return false;
             }
@@ -124,9 +124,7 @@ export class ColumnRepository implements IColumnRepository {
             return true
 
         } catch (error) {
-            if (session.inTransaction()) {
-                await session.abortTransaction()
-            }
+            await session.abortTransaction()
             throw error
         } finally {
             await session.endSession()
