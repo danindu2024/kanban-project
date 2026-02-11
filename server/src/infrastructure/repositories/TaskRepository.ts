@@ -119,7 +119,7 @@ export class TaskRepository implements ITaskRepository {
 
         // Safety against race condition: If task doesn't exist, throw error
         if (!task) {
-            throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task nor found', 404)
+            throw new AppError(ErrorCodes.TASK_NOT_FOUND, 'Task not found', 404)
         }
 
         const currentOrder = task.order
@@ -135,8 +135,9 @@ export class TaskRepository implements ITaskRepository {
 
         // close the gap of deleted item
         await TaskModel.updateMany(
-            {column_id: currentColumnId,
-            order: {$gt: currentOrder}
+            {
+                column_id: currentColumnId,
+                order: {$gt: currentOrder}
             },
             {$inc: {order: -1}}
         ).session(session)
@@ -174,6 +175,27 @@ export class TaskRepository implements ITaskRepository {
         const currentColumnId = task.column_id.toString();
         const isSameColumn = currentColumnId === targetColumnId;
         const currentOrder = task.order
+
+        // Get last task index
+        const taskCount = isSameColumn 
+            ? await TaskModel.countDocuments({column_id: task.column_id}).session(session) // Fetch from source column if same
+            : await TaskModel.countDocuments({column_id: targetColumnId}).session(session); // Fetch from target column if different
+
+        const maxAllowedOrder = isSameColumn ? taskCount - 1 : taskCount;
+
+        // check if max tasks per column is reached
+        if(maxAllowedOrder+1 > businessRules.MAX_TASKS_PER_COLUMN){ // order + 1 = total tasks
+            throw new AppError(ErrorCodes.BUSINESS_RULE_VIOLATION, `Maximum tasks per column ${businessRules.MAX_TASKS_PER_COLUMN} reached`, 400)
+        }
+
+        // new order must be less than last task index
+        if (newOrder > maxAllowedOrder) {
+            throw new AppError(
+                ErrorCodes.BUSINESS_RULE_VIOLATION, 
+                `New order (${newOrder}) must be less than or equal to last task index (${maxAllowedOrder})`, 
+                400
+            );
+        }
 
         if (isSameColumn) {
             // SCENARIO A: Reordering within the SAME column

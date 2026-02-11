@@ -317,6 +317,17 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
      3. This integrity was strictly validated during Task Creation (see Creation logic).
    * **Benefit:** Eliminates an redundant database lookup (`ColumnRepository.findById`), reducing the latency of the update operation.
 
+* **Delete Task Validation Flow:**
+    *   **Step 1: Parallel Fetch (Optimization):** The system fetches the `User` (requester) and the `Task` (target) simultaneously.
+    *   **Step 2: Existence Checks:**
+        *   If User is missing -> `USER_NOT_FOUND (404)`
+        *   If Task is missing -> `TASK_NOT_FOUND (404)`
+    *   **Step 3: Board Context:** Fetch the `Board` using `task.board_id` to verify ownership context. If missing -> `BOARD_NOT_FOUND (404)`.
+    *   **Step 4: Authorization:**
+        *   Check if Requester is `Admin` OR `Board Owner`.
+        *   If neither -> `BOARD_ACCESS_DENIED (403)`.
+    *   **Step 5: Execution:** Proceed to `TaskRepository.delete` (Transactional delete + reorder).
+
 ### 3.12 Order Generation Logic
 The system enforces sequential ordering (0-based index) for both Columns and Tasks to support consistent UI rendering and drag-and-drop operations.
 
@@ -348,11 +359,18 @@ The system supports moving items (Columns/Tasks) to arbitrary positions. The bac
         3.  **Update Task:** Set `column_id = B` and `order = Y`.
     *   **Validation:**
         *   Target Column must belong to the **same Board** (`VALIDATION_ERROR`).
-        *   New Order must be valid (`<=` task count in target column).
+        *   **Boundary Check:** The system verifies that `New Order` is valid (`<=` task/column count) **within the repository transaction**. This prevents race conditions where a concurrent delete might invalidate the count before the move occurs.
 
 * **Concurrency Safety:**
     *   **Isolation:** All operations (shifts + update) occur within a single **ACID Transaction**.
     *   **Locking:** Pessimistic locking of parent documents (Source Column AND Target Column) ensures the `count` and `order` integrity is maintained during the move.
+
+* **Scenario C: Task Deletion**
+    *   **Context:** Deleting a task from a column (Index X).
+    *   **Logic:**
+        1.  **Delete:** Remove the task document.
+        2.  **Close Gap:** Shift tasks in the same Column where `order > X` **UP** (`order - 1`).
+    *   **Concurrency:** Performed within an ACID transaction to ensure the list remains sequential without gaps.
 
 ### 3.13 Input Sanitization Strategy
 * **Strategy:** Defensive Normalization (Defense in Depth)

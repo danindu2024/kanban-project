@@ -753,12 +753,67 @@ POST `api/columns [Auth]`
 ### 4.2 Move Column (Drag & Drop)
 PATCH `api/columns/:id/order [Auth]`
 
-* **Body:** `{ "new_order_index": 2 }`
+* **Description:** Handles moving a column to a new position.
+* **Permission:** Only Board Owner or Admin.
+* **Behavior:**
+    *   **Reordering:** Moves column to the new index.
+    *   **Shifting:** 
+        *   **Moving Down:** Columns between the old and new position shift **UP** (-1) to fill the gap.
+        *   **Moving Up:** Columns between the new and old position shift **DOWN** (+1) to make room.
+* **Body:**
+```json
+{ "new_order_index": 2 }
+```
 
+* **Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Column moved successfully"
+}
+```
+
+* **Error (400 Bad Request - Invalid Input):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "New order must be a non-negative integer"
+  }
+}
+```
+
+* **Error (400 Bad Request - Out of Bounds):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "New order (5) exceeds last column index (4)"
+  }
+}
+```
+
+* **Error (403 Forbidden - Access Denied):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Only admin or board owner can move column"
+  }
+}
+```
+
+* **Error (404 Not Found - Column/Board):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "COLUMN_001",
+    "message": "Column not found"
+  }
 }
 ```
 
@@ -1174,6 +1229,7 @@ PATCH `api/tasks/:id [Auth]`
 ### 5.4 Delete Task
 DELETE `api/tasks/:id [Auth]`
 * **Permission:** RESTRICTED. Only Board Owner or Admin can delete tasks.
+* **Behavior:** Deletes the task and reorders remaining tasks in the column to close the gap (shifts subsequent tasks result in `order - 1`).
 * **Response (200 OK):**
 ```json
 {
@@ -1188,7 +1244,40 @@ DELETE `api/tasks/:id [Auth]`
   "success": false,
   "error": {
     "code": "BOARD_002",
-    "message": "Only board owner or admin can delete tasks."
+    "message": "Not Authorized"
+  }
+} 
+```
+
+* **Error (404 Not Found - Task):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TASK_001",
+    "message": "Task not found"
+  }
+}
+```
+
+* **Error (404 Not Found - User):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
+* **Error (404 Not Found - Board):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
   }
 }
 ```

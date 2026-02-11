@@ -4,13 +4,13 @@ import { IBoardRepository } from "../../domain/repositories/IBoardRepository";
 import { AppError } from "../../utils/AppError";
 import { ErrorCodes } from "../../constants/errorCodes";
 
-interface MoveColumnRequestDTO{
+interface MoveColumnRequestDTO {
     userId: string
     columnId: string
     newOrder: number
 }
 
-export class MoveColumnUseCase{
+export class MoveColumnUseCase {
     private columnRepository: IColumnRepository
     private userRepository: IUserRepository
     private boardRepository: IBoardRepository
@@ -25,41 +25,44 @@ export class MoveColumnUseCase{
         this.boardRepository = boardRepository
     }
 
-    async execute({userId, columnId, newOrder}: MoveColumnRequestDTO): Promise<void>{
-        // valide user exist
-        const user = await this.userRepository.findById(userId)
-        if(!user){
+    async execute({ userId, columnId, newOrder }: MoveColumnRequestDTO): Promise<void> {
+        // column id comes from req params. Invalid id throw cast error
+        // validate input
+        if (newOrder === undefined || typeof newOrder !== 'number' || newOrder < 0) {
+            throw new AppError(ErrorCodes.VALIDATION_ERROR, 'New order must be a non-negative integer', 400)
+        }
+
+        // fetch user, column in parallel
+        const [user, column] = await Promise.all([
+            this.userRepository.findById(userId),
+            this.columnRepository.findById(columnId)
+        ])
+
+        // verify user exists
+        if (!user) {
             throw new AppError(ErrorCodes.USER_NOT_FOUND, 'User not found', 404)
         }
 
-        // validate column exists
-        const column = await this.columnRepository.findById(columnId)
-        if(!column){
+        // verify column exists
+        if (!column) {
             throw new AppError(ErrorCodes.COLUMN_NOT_FOUND, 'Column not found', 404)
         }
 
-        // validate board exist
+        // fetch board seperately as it depends on column
         const board = await this.boardRepository.findById(column.board_id)
-        if(!board){
+        if (!board) {
             throw new AppError(ErrorCodes.BOARD_NOT_FOUND, 'Board not found', 404)
         }
 
         // Authorization check
-        // only admin or owner can create columns
+        // only admin or board owner can move columns
         const isAdmin = user.role === 'admin'
-        const isOwner = user.id.toString() == board.owner_id.toString()
-        if(!isAdmin && !isOwner){
-            throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can update column', 403)
+        const isOwner = user.id === board.owner_id
+        if (!isAdmin && !isOwner) {
+            throw new AppError(ErrorCodes.BOARD_ACCESS_DENIED, 'Only admin or board owner can move column', 403)
         }
 
-        if(newOrder === undefined){
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, 'New order must be provided', 400)
-        }
-
-        if(typeof newOrder !== 'number' || newOrder < 0){
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Neworder must be non a negative integer')
-        }
-
+        // move column (boundary check happens inside the repository transaction)
         await this.columnRepository.moveColumn(columnId, newOrder)
     }
 }
