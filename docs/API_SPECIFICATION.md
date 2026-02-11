@@ -1229,6 +1229,7 @@ PATCH `api/tasks/:id [Auth]`
 ### 5.4 Delete Task
 DELETE `api/tasks/:id [Auth]`
 * **Permission:** RESTRICTED. Only Board Owner or Admin can delete tasks.
+* **Behavior:** Deletes the task and reorders remaining tasks in the column to close the gap (shifts subsequent tasks result in `order - 1`).
 * **Response (200 OK):**
 ```json
 {
@@ -1243,7 +1244,40 @@ DELETE `api/tasks/:id [Auth]`
   "success": false,
   "error": {
     "code": "BOARD_002",
-    "message": "Only board owner or admin can delete tasks."
+    "message": "Not Authorized"
+  }
+} 
+```
+
+* **Error (404 Not Found - Task):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TASK_001",
+    "message": "Task not found"
+  }
+}
+```
+
+* **Error (404 Not Found - User):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
+* **Error (404 Not Found - Board):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
   }
 }
 ```
