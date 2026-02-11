@@ -14,5 +14,4 @@ export interface IColumnRepository {
   findById(id: string): Promise<Column | null>;
   delete(id: string): Promise<Boolean>;
   moveColumn(id: string, newOrder: number): Promise<void>
-  countColumn(boradId: string): Promise<number>
 }
