@@ -388,3 +388,26 @@ Updated Error Codes Reference to include "violation of field length limits" as a
     * Added **"Column Authorization Model"** (Section 3.11).
     * Added **"Delete Column Validation Flow"** (Section 3.12).
     * Consolidated deletion logic into **"Scenario C: Deletion (Tasks & Columns)"** (Section 3.13).
+
+---
+
+**Date:** February 12, 2026
+**Feature:** Delete Board (`DeleteBoard`)
+
+#### Added
+* **Core Use Case:** Implemented `DeleteBoard` to allow Board Owners and Admins to remove empty boards.
+* **Validation Strategy:**
+    * **Integrity Check:** Board must be empty (no columns) before deletion. Returns `VAL_003` if columns exist.
+    * **Authorization:** Strict RBAC ensuring only `Admin` or `Board Owner` can delete boards (`BOARD_ACCESS_DENIED` if unauthorized).
+    * **Parallel Execution:** Optimized performance by fetching User and Board data in parallel.
+    * **Safety Check:** Double-check `deletedCount` result to prevent race condition references.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Updated **Section 3.4**:
+        * Added Description: "Deletes a board. Board must be empty."
+        * Added Permission: "Only Board Owner or Admin".
+        * Documented full response range: `200 OK`, `400 Bad Request` (Not Empty), `403 Forbidden`, `404 Not Found`.
+* **TECHNICAL_DESIGN.md:**
+    * Added **"Board Authorization Model"** (Section 3.7).
+    * Added **"Delete Board Validation Flow"** (Section 3.7).
