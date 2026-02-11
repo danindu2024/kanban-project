@@ -21,8 +21,6 @@ export class DeleteTaskUseCase {
     }
 
     async execute({taskId, userId}: DeleteTaskRequestDTO): Promise<void> {
-        // task id is send through url. Invalid ids throw cast error
-
         // Fetch independent data in parallel (User and Task)
         const [user, task] = await Promise.all([
             this.userRepository.findById(userId),

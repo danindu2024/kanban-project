@@ -25,8 +25,6 @@ export class DeleteColumnUseCase{
     }
 
     async execute({userId, columnId}: DeleteColumnRequestDTO): Promise<void>{
-        // column id is send through url. Invalid ids throw cast error
-
         // Fetch independent data in parallel
         const [user, column] = await Promise.all([
             this.userRepository.findById(userId),
