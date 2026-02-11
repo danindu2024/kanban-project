@@ -338,3 +338,28 @@ Updated Error Codes Reference to include "violation of field length limits" as a
     * Explicitly documented the shifting behavior (Up/Down) for reordering.
 * **TECHNICAL_DESIGN.md:**
     * Updated **Section 3.12** to explicitly mention that boundary checks for move operations occur within the repository transaction.
+
+---
+
+**Date:** February 11, 2026
+**Feature:** Delete Task (`DeleteTaskUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `DeleteTaskUseCase` to allow Board Owners and Admins to remove tasks.
+* **Reordering Logic:**
+    * Implemented **"Close Gap" Strategy:** When a task is deleted, the system automatically shifts subsequent tasks in the same column **UP** (`order - 1`) to prevent gaps in the sequence.
+    * **Concurrency:** This operation is wrapped in a MongoDB Transaction to ensure atomicity.
+* **Validation Strategy:**
+    * **Authorization:** Strict RBAC ensuring only `Admin` or `Board Owner` can delete tasks (`BOARD_ACCESS_DENIED` if unauthorized).
+    * **Existence Checks:** Validates existence of User, Task, and Board before proceeding, returning precise `404` errors (`USER_NOT_FOUND`, `TASK_NOT_FOUND`, `BOARD_NOT_FOUND`).
+    * **Parallel Execution:** Optimized performance by fetching User and Task data in parallel.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Updated **Section 5.4**:
+        * Added explicit behavior note: "Deletes the task and reorders remaining tasks".
+        * Documented missing error envelopes: `TASK_001` (Task Not Found), `USER_001` (User Not Found), `BOARD_001` (Board Not Found).
+        * Corrected `403` error message to match implementation ("Not Authorized").
+* **TECHNICAL_DESIGN.md:**
+    * Added **"Delete Task Validation Flow"** to Section 3.11, detailing the 5-step validation process.
+    * Added **"Scenario C: Task Deletion"** to Section 3.12 (Order Generation Logic), explaining the gap-closing algorithm.
