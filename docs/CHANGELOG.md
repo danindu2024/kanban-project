@@ -363,3 +363,28 @@ Updated Error Codes Reference to include "violation of field length limits" as a
 * **TECHNICAL_DESIGN.md:**
     * Added **"Delete Task Validation Flow"** to Section 3.11, detailing the 5-step validation process.
     * Added **"Scenario C: Task Deletion"** to Section 3.12 (Order Generation Logic), explaining the gap-closing algorithm.
+
+---
+
+**Date:** February 11, 2026
+**Feature:** Delete Column (`DeleteColumnUseCase`)
+
+#### Added
+* **Core Use Case:** Implemented `DeleteColumnUseCase` to allow Board Owners and Admins to remove empty columns.
+* **Reordering Logic:**
+    * Implemented **"Close Gap" Strategy:** When a column is deleted, the system automatically shifts subsequent columns in the same board **UP** (`order - 1`) to prevent gaps in the sequence.
+    * **Concurrency:** This operation is wrapped in a MongoDB Transaction to ensure atomicity.
+* **Validation Strategy:**
+    * **Integrity Check:** Tasks must be deleted/moved before column deletion. Returns `VAL_003` if column is not empty.
+    * **Authorization:** Strict RBAC ensuring only `Admin` or `Board Owner` can delete columns (`BOARD_ACCESS_DENIED` if unauthorized).
+    * **Parallel Execution:** Optimized performance by fetching User and Column data in parallel.
+
+#### Documentation Updates
+* **API_SPECIFICATION.md:**
+    * Updated **Section 4.4**:
+        * Added Permission note: "Only Board Owner or Admin".
+        * Documented missing error envelopes: `BOARD_002` (Forbidden), `COLUMN_001`, `USER_001`, `BOARD_001` (Not Found).
+* **TECHNICAL_DESIGN.md:**
+    * Added **"Column Authorization Model"** (Section 3.11).
+    * Added **"Delete Column Validation Flow"** (Section 3.12).
+    * Consolidated deletion logic into **"Scenario C: Deletion (Tasks & Columns)"** (Section 3.13).
