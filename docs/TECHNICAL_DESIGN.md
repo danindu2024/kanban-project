@@ -174,6 +174,12 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
    * **Concurrency:** No transaction required for MVP (Business Decision). "Double-click" race conditions are acceptable risks for this specific feature.
 
 ### 3.6 Column Validation Rules
+#### Column Authorization Model
+
+- **Create Column:** Allowed for Board Owner or Admin only.
+- **Update Column:** Allowed for Board Owner or Admin only.
+- **Delete Column:** Allowed for Board Owner or Admin only.
+- **Move Column:** Allowed for Board Owner or Admin only.
 
 * **Authorization:**
    * **Actor:** Only users with role: 'admin' OR the owner_id of the parent board can create columns.
@@ -190,6 +196,17 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
    * **Limit Enforcement:** Maximum 20 columns per board.
    * **Implementation:** Checked transactionally in ColumnRepository after acquiring a lock on the Board document.
    * **Concurrency:** Uses a "Count-then-Write" strategy guarded by a parent Board lock to prevent race conditions exceeding the limit.
+
+* **Delete Column Validation Flow:**
+    *   **Step 1: Parallel Fetch (Optimization):** The system fetches the `User` (requester) and the `Column` (target) simultaneously.
+    *   **Step 2: Existence Checks:**
+        *   If User is missing -> `USER_NOT_FOUND (404)`
+        *   If Column is missing -> `COLUMN_001` (404)
+    *   **Step 3: Board Context:** Fetch the `Board` using `column.board_id` to verify ownership context. If missing -> `BOARD_NOT_FOUND (404)`.
+    *   **Step 4: Authorization:**
+        *   Check if Requester is `Admin` OR `Board Owner`.
+        *   If neither -> `BOARD_ACCESS_DENIED (403)`.
+    *   **Step 5: Execution:** Proceed to `ColumnRepository.delete` (Transactional delete + reorder).
 
 ### 3.7 Authorization Model for Boards
 
@@ -365,11 +382,11 @@ The system supports moving items (Columns/Tasks) to arbitrary positions. The bac
     *   **Isolation:** All operations (shifts + update) occur within a single **ACID Transaction**.
     *   **Locking:** Pessimistic locking of parent documents (Source Column AND Target Column) ensures the `count` and `order` integrity is maintained during the move.
 
-* **Scenario C: Task Deletion**
-    *   **Context:** Deleting a task from a column (Index X).
+* **Scenario C: Deletion (Tasks & Columns)**
+    *   **Context:** Deleting an item (Task or Column) from a list (Index X).
     *   **Logic:**
-        1.  **Delete:** Remove the task document.
-        2.  **Close Gap:** Shift tasks in the same Column where `order > X` **UP** (`order - 1`).
+        1.  **Delete:** Remove the document.
+        2.  **Close Gap:** Shift subsequent items in the same container (Column/Board) where `order > X` **UP** (`order - 1`).
     *   **Concurrency:** Performed within an ACID transaction to ensure the list remains sequential without gaps.
 
 ### 3.13 Input Sanitization Strategy
