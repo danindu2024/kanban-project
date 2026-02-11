@@ -348,7 +348,7 @@ The system supports moving items (Columns/Tasks) to arbitrary positions. The bac
         3.  **Update Task:** Set `column_id = B` and `order = Y`.
     *   **Validation:**
         *   Target Column must belong to the **same Board** (`VALIDATION_ERROR`).
-        *   New Order must be valid (`<=` task count in target column).
+        *   **Boundary Check:** The system verifies that `New Order` is valid (`<=` task/column count) **within the repository transaction**. This prevents race conditions where a concurrent delete might invalidate the count before the move occurs.
 
 * **Concurrency Safety:**
     *   **Isolation:** All operations (shifts + update) occur within a single **ACID Transaction**.
