@@ -46,7 +46,7 @@ export class CreateBoard {
     }
     if(sanitizedTitle.length > businessRules.MAX_BOARD_TITLE_LENGTH){
       throw new AppError(
-        ErrorCodes.VALIDATION_ERROR,
+        ErrorCodes.BUSINESS_RULE_VIOLATION,
         `Board title must be less than ${businessRules.MAX_BOARD_TITLE_LENGTH} characters`,
         400
       );
