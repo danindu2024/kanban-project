@@ -74,7 +74,7 @@ _Why separate collection? To allow massive scaling of columns without hitting BS
 | `description` | String   | Markdown supported                                                      |
 | `priority`    | String   | ENUM: ['low', 'medium', 'high'] - Default: 'low'                        |
 | `assignee_id` | ObjectId | Ref: Users (Nullable, Single assignee only)                             |
-| `order`       | Number   | For drag-and-drop positioning. Note: Managed via Mutex Transactio(0-20) |
+| `order`       | Number   | For drag-and-drop positioning. Note: Managed via Mutex Transactions (no 0-50 limit) |
 
 ### 2.2: Indexing Strategy
 
@@ -274,7 +274,7 @@ To efficiently retrieve a full board hierarchy (Board → Columns → Tasks) wit
 - **Implementation:**
 
 #### A. Task Ordering (Pessimistic Locking)
-* **Context:** Sequential ordering (1, 2, 3) requires atomic "Read-Count-Write" operations.Enforcing the "Max 50 taskss" limit requires preventing concurrent writes that might exceed the limit (e.g., two users creating the 20th column simultaneously).
+* **Context:** Sequential ordering (1, 2, 3) requires atomic "Read-Count-Write" operations.Enforcing the "Max 50 tasks" limit requires preventing concurrent writes that might exceed the limit (e.g., two users creating the 20th column simultaneously).
 * **Solution:** Lock parent **Column** document.
 * **Implementation:**
   1. Start Transaction.
