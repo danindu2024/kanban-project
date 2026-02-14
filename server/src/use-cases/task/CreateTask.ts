@@ -115,7 +115,7 @@ export class CreateTaskUseCase {
         // Validate priority
         const finalPriority: Priority = priority || 'low'; // priority set to low by default
         if (!(VALID_PRIORITIES as readonly string[]).includes(finalPriority)) {
-            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Priority must be 'low', 'medium', or 'high'", 400);
+            throw new AppError(ErrorCodes.VALIDATION_ERROR, "Invalid priority type", 400);
         }
 
         // Validate description
