@@ -76,6 +76,39 @@ POST `api/auth/register`
 }
 ```
 
+* **Error (400 Bad Request - Missing Required Fields):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_002",
+    "message": "Missing required fields"
+  }
+}
+```
+
+* **Error (400 Bad Request - Invalid Input):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Invalid email format"
+  }
+}
+```
+
+* **Error (400 Bad Request - Length Limits):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_003",
+    "message": "Email must not exceed <MAX_EMAIL_LENGTH> characters"
+  }
+}
+```
+
 * **Error (500 Internal Server Error - bcrypt failiure):**
 ```json
 {
@@ -112,24 +145,24 @@ POST `api/auth/login`
 }
 ```
 
-* **Error (401 unautorized - invalide email or password):**
+* **Error (401 Unauthorized - Invalid email or password):**
 ```json
 {
   "success": false,
   "error": {
     "code": "AUTH_001",
-    "message": "Invalide email or password"
+    "message": "invalid email or password"
   }
 }
 ```
 
-* **Error (401 unautorized - invalide email or password length):**
+* **Error (401 Unauthorized - Invalid email or password length):**
 ```json
 {
   "success": false,
   "error": {
     "code": "AUTH_001",
-    "message": "Invalide email or password"
+    "message": "invalid email or password"
   }
 }
 ```
@@ -141,6 +174,17 @@ POST `api/auth/login`
   "error": {
     "code": "VAL_002",
     "message": "Missing required fields"
+  }
+}
+```
+
+* **Error (400 Bad Request - Invalid Input)**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Invalid email format"
   }
 }
 ```
@@ -271,7 +315,7 @@ POST `api/boards [Auth]`
 {
   "success": false,
   "error": {
-    "code": "VAL_001",
+    "code": "VAL_003",
     "message": "Board title must be less than <MAX_BOARD_TITLE_LENGTH> characters"
   }
 }
@@ -294,7 +338,7 @@ POST `api/boards [Auth]`
   "success": false,
   "error": {
     "code": "VAL_001",
-    "message": "Invalide OID foramt"
+    "message": "invalid OID foramt"
   }
 }
 ```
@@ -370,13 +414,35 @@ GET `api/boards/:id [Auth]`
 }
 ```
 
-* **Error (403 Forbidden - Access Denied):**
+* **Error (403 Forbidden - Board access denied):**
 ```json
 {
   "success": false,
   "error": {
     "code": "BOARD_002",
     "message": "Board access denied"
+  }
+}
+```
+
+* **Error (404 Not Found - User):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
+* **Error (404 Not Found - Missing Fields):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_002",
+    "message": "Missing required fields"
   }
 }
 ```
@@ -596,7 +662,7 @@ POST `api/boards/:id/members [Auth]`
   "success": false,
   "error": {
     "code": "VAL_003",
-    "message": "Cannot add members. Board limit of maximum <MAX_MEMBERS_PER_BOARD> members will be exceeded"
+    "message": "Can only add maximum of <MAX_MEMBERS_PER_BOARD> members at a time"
   }
 }
 ```
@@ -757,18 +823,29 @@ POST `api/columns [Auth]`
   "success": false,
   "error": {
     "code": "VAL_003",
-    "message": "Can't create new column. Maximum limit(<MAX_COLUMNS_PER_BOARD>) exceeded"
+    "message": "Can't create new column. Maximum limit <MAX_COLUMNS_PER_BOARD> exceeded"
   }
 }
 ```
 
-* **Error (404 Not Found):**
+* **Error (404 Not Found - Board):**
 ```json
 {
   "success": false,
   "error": {
     "code": "BOARD_001",
     "message": "Requested board doesn't exist"
+  }
+}
+```
+
+* **Error (404 Not Found - User):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "Requested user doesn't exist"
   }
 }
 ```
@@ -801,7 +878,7 @@ POST `api/columns [Auth]`
   "success": false,
   "error": {
     "code": "VAL_001",
-    "message": "Invalide OID foramt"
+    "message": "invalid OID foramt"
   }
 }
 ```
@@ -846,7 +923,7 @@ PATCH `api/columns/:id/order [Auth]`
   "success": false,
   "error": {
     "code": "VAL_003",
-    "message": "New order (5) exceeds last column index (4)"
+    "message": "New order <NEW_ORDER> exceeds last column index <MAX_ALLOWED_ORDER>"
   }
 }
 ```
@@ -862,13 +939,33 @@ PATCH `api/columns/:id/order [Auth]`
 }
 ```
 
-* **Error (404 Not Found - Column/Board):**
+* **Error (404 Not Found - Column/User/Board):**
 ```json
 {
   "success": false,
   "error": {
     "code": "COLUMN_001",
     "message": "Column not found"
+  }
+}
+```
+*or*
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+*or*
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
   }
 }
 ```
@@ -916,7 +1013,18 @@ PATCH `api/columns/:id [Auth]`
 }
 ```
 
-* **Error (404 Not Found):**
+* **Error (404 Not Found -User):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
+* **Error (404 Not Found - Board):**
 ```json
 {
   "success": false,
@@ -1029,14 +1137,31 @@ POST `api/tasks [Auth]`
 * **Permission:** User must be Board Owner OR Member.
 
 * **Body:**
-
-```JSON
-
+```json
 {
   "board_id": "b1",
   "column_id": "c1",
   "title": "Implement Login",
   "priority": "high"
+}
+```
+
+* **Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "t1",
+    "title": "Implement Login",
+    "description": "",
+    "priority": "high",
+    "assignee_id": null,
+    "column_id": "c1",
+    "board_id": "b1",
+    "order": 1,
+    "created_at": "2025-01-20T10:00:00Z",
+    "updated_at": "2025-01-20T10:00:00Z"
+  }
 }
 ```
 
@@ -1084,6 +1209,28 @@ POST `api/tasks [Auth]`
 }
 ```
 
+* **Error (404 Not Found - User/Assignee not found):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found" 
+  }
+}
+```
+
+* **Error (404 Not Found - Board not found):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found" 
+  }
+}
+```
+
 * **Error (400 Bad Request - Missing Fields):**
 ```json
 {
@@ -1112,7 +1259,7 @@ POST `api/tasks [Auth]`
   "success": false,
   "error": {
     "code": "VAL_001",
-    "message": "Priority must be 'low', 'medium', or 'high'" 
+    "message": "Invalid priority type" 
   }
 }
 ```
@@ -1123,7 +1270,7 @@ POST `api/tasks [Auth]`
   "success": false,
   "error": {
     "code": "VAL_001",
-    "message": "Invalide OID foramt"
+    "message": "invalid OID foramt"
   }
 }
 ```
@@ -1173,14 +1320,80 @@ PATCH `api/tasks/:id/move [Auth]`
 }
 ```
 
-* **Error (400 Bad Request - Out of Bounds):**
+* **Error (400 Bad Request - Missing Fields):**
 
 ```json
 {
   "success": false,
   "error": {
+    "code": "VAL_001",
+    "message": "Target column and non-negative order are required"
+  }
+}
+```
+
+* **Error (403 Forbidden - Access Denied):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_002",
+    "message": "Not Authorized"
+  }
+}
+```
+
+* **Error (404 Not Found - Task):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TASK_001",
+    "message": "Task not found"
+  }
+}
+```
+
+* **Error (404 Not Found - User):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_001",
+    "message": "User not found"
+  }
+}
+```
+
+* **Error (404 Not Found - Board):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOARD_001",
+    "message": "Board not found"
+  }
+}
+```
+
+* **Error (404 Not Found - Column):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "COLUMN_001",
+    "message": "Target column does not exist"
+  }
+}
+```
+
+* **Error (400 Bad Request - Limit Exceeded):**
+```json
+{
+  "success": false,
+  "error": {
     "code": "VAL_003",
-    "message": "New order (5) must be less than or equal to last task index (4)"
+    "message": "Maximum tasks per column <MAX_TASKS_PER_COLUMN> reached"
   }
 }
 ```
@@ -1272,7 +1485,7 @@ PATCH `api/tasks/:id [Auth]`
 }
 ```
 
-* **Error (400 Bad Request - Empty/onlt white space task title):**
+* **Error (400 Bad Request - Empty/only white space task title):**
 ```json
 {
   "success": false,
@@ -1283,7 +1496,7 @@ PATCH `api/tasks/:id [Auth]`
 }
 ```
 
-* **Error (400 Bad Request - Invalide priority type):**
+* **Error (400 Bad Request - invalid priority type):**
 ```json
 {
   "success": false,
@@ -1412,7 +1625,7 @@ DELETE `api/tasks/:id [Auth]`
 
 |Code|Name|Description|Common Causes|
 | :-------------- | :------- | :---------------------- | :---  |
-|AUTH_001|Invalid Credentials|Invalide email or password|Wrong password, unregistered email, or violation of field length limits during login|
+|AUTH_001|Invalid Credentials|invalid email or password|Wrong password, unregistered email, or violation of field length limits during login|
 |AUTH_002|Token Expired|JWT has expired|Session timeout|
 |AUTH_003|Token Invalid|JWT signature invalid|Tampered token|
 |AUTH_004|User Not Authenticated|User identity not verified|Missing user in JWT payload|
@@ -1424,10 +1637,11 @@ DELETE `api/tasks/:id [Auth]`
 |VAL_002|MISSING_REQUIRED_FIELDS|Missing required fields|User hasn't provided required fields or contain only whitespace|
 |VAL_003|Business Rule Violation|Request technically valid but violates logic constraints|Exceeding 20 tasks/column, Title > 150 chars, Email > 255 chars, Password > 50 chars|
 |RATE_001|Rate Limit Exceeded|Too many requests|Hitting 100 req/15min limit|
-|URL_001|URL Not Found|URL Not Fount|Undefined URL|
+|URL_001|URL Not Found|URL Not Found|Undefined URL|
 |SERVER_001|INTERNAL ERROR|Internal Server doesn't work|server crashes|
 |USER_001|User Not Found|Requested user doesn't exist|Invalid user ID in JWT payload|
 |USER_002|User Already Exists|Email already registered|Duplicate registration attempt|
+|COLUMN_001|Column Not Found|Requested column doesn't exist|Invalid column ID|
 
 ## 9. State Management Contract
 Zustand store structure:
