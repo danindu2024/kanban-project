@@ -16,6 +16,9 @@ const config: Config = {
     // Module file extensions
     moduleFileExtensions: ['ts', 'js', 'json'],
 
+    // Load test environment variables before any test module
+    setupFiles: ['<rootDir>/tests/setup.ts'],
+
     // Coverage configuration
     collectCoverageFrom: [
         'src/**/*.ts',
@@ -38,6 +41,11 @@ const config: Config = {
 
     // Verbose output
     verbose: true,
+
+    // coverage report
+    collectCoverage: true,
+    coverageDirectory: "coverage",
+    coverageProvider: "v8",
 };
 
 export default config;
