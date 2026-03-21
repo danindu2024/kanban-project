@@ -13,7 +13,7 @@
 
 <br/>
 
-> A streamlined, enterprise-grade Kanban board built with **Clean Architecture** principles. Designed for university students and small teams who need the power of professional tools—without the complexity or cost.
+> A streamlined, enterprise-grade Kanban board built with **Clean Architecture** principles. Designed for university students and small teams who need the power of professional tools without the complexity or cost.
 
 <br/>
 

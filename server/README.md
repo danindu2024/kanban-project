@@ -32,17 +32,17 @@
 
 ## 🎯 Overview
 
-The FlowState backend is a **RESTful API** built with Node.js and TypeScript, following **Clean Architecture** (also known as Hexagonal Architecture or Ports & Adapters). Every design decision—from folder structure to error handling—is intentional and documented.
+The FlowState backend is a **RESTful API** built with Node.js and TypeScript, following **Clean Architecture** (also known as Hexagonal Architecture or Ports & Adapters). Every design decision from folder structure to error handling is intentional and documented.
 
 ### Key Engineering Decisions
 
-| Decision               | Why                                                                                                   |
-| :--------------------- | :---------------------------------------------------------------------------------------------------- |
-| **Clean Architecture** | Business logic survives framework migrations. Swap Express for Fastify? Only the outer layer changes. |
-| **Repository Pattern** | Database is a detail. Swap MongoDB for PostgreSQL without touching a single use case.                 |
-| **Use Case Classes**   | Each business operation is a standalone, testable unit with explicit dependencies.                    |
-| **ACID Transactions**  | Task ordering and column limits are protected by pessimistic locking—no race conditions.              |
-| **Typed Error System** | Every error has a code (`AUTH_001`, `BOARD_002`). Frontend never guesses what went wrong.             |
+| Decision               | Why                                                                                                                                                      |
+| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Clean Architecture** | Decouples business logic from infrastructure (Mongoose/Express), ensuring the domain layer remains testable and framework-agnostic.                      |
+| **Repository Pattern** | Abstracts database complexity (e.g., `ObjectId` casting, virtual population) to ensure Use Cases operate on pure, type-safe entities.                    |
+| **Use Case Classes**   | Enforces the Single Responsibility Principle by encapsulating specific business rules (e.g., `MoveTask`, `RegisterUser`) separate from HTTP controllers. |
+| **ACID Transactions**  | Uses Pessimistic Locking to prevent race conditions during concurrent operations like task reordering (Drag & Drop) and limit enforcement.               |
+| **Typed Error System** | Standardizes API responses using a central AppError class and specific error codes (e.g., `VAL_003`) to decouple UI logic from backend exceptions.       |
 
 ---
 
@@ -52,27 +52,27 @@ The codebase implements a strict **4-layer architecture** where dependencies flo
 
 ```
                     ┌──────────────────────┐
-                    │    Domain Layer      │  ← Pure TypeScript
-                    │  Entities + Repos    │     No imports. No frameworks.
-                    │   (Interfaces)       │     Just business objects.
+                    │     Domain Layer     │  ← Pure TypeScript
+                    │   Entities + Repos   │    No imports. No frameworks.
+                    │     (Interfaces)     │    Just business objects.
                     └──────────┬───────────┘
                                │ implements
                     ┌──────────▼───────────┐
                     │  Application Layer   │  ← Orchestration
-                    │    (Use Cases)       │     Validates, authorizes,
-                    │                      │     coordinates operations.
+                    │     (Use Cases)      │    Validates, authorizes,
+                    │                      │    coordinates operations.
                     └──────────┬───────────┘
                                │ calls
                     ┌──────────▼───────────┐
                     │   Adapters Layer     │  ← Translation
-                    │ Controllers + Routes │     HTTP ↔ Use Case mapping.
-                    │                      │     Request parsing, response formatting.
+                    │ Controllers + Routes │    HTTP ↔ Use Case mapping.
+                    │                      │    Request parsing, response formatting.
                     └──────────┬───────────┘
                                │ uses
                     ┌──────────▼───────────┐
                     │ Infrastructure Layer │  ← Implementation Details
-                    │  Mongoose Models     │     DB connections, schemas,
-                    │  Repo Implementations│     data mapping (ObjectId → string).
+                    │   Mongoose Models    │    DB connections, schemas,
+                    │ Repo Implementations│    data mapping (ObjectId → string).
                     └──────────────────────┘
 ```
 
@@ -156,17 +156,17 @@ server/src/
 ### Entity Relationship
 
 ```
-┌─────────┐          ┌──────────┐           ┌──────────┐          ┌─────────┐
-│  User   │ owns ──▶ │  Board   │ contains ▶│  Column  │ contains▶│  Task   │
-│         │◀── member │          │           │          │          │         │
-│ • email │  of ─────│ • title  │           │ • title  │          │ • title │
-│ • name  │          │ • owner  │           │ • order  │          │ • desc  │
-│ • role  │          │ • members│           │ • board↗ │          │ • priority│
-│ • hash  │          └──────────┘           └──────────┘          │ • order │
-└─────────┘                                                       │ • assignee│
-     ▲                                                            │ • column↗│
-     └──────────────────────── assigned to ◀──────────────────────│ • board↗│
-                                                                  └─────────┘
+┌─────────┐               ┌──────────┐            ┌──────────┐             ┌────────────┐
+│  User   │ owns ──▶     │  Board   │ contains ─▶│  Column  │ contains ─▶│  Task      │
+│         │◀── member of │          │            │          │             │            │
+│ • email │               │ • title  │            │ • title  │             │ • title    │
+│ • name  │               │ • owner  │            │ • order  │             │ • desc     │
+│ • role  │               │ • members│            │ • board↗ │             │ • priority │
+│ • hash  │               └──────────┘            └──────────┘             │ • order    │
+└─────────┘                                                                │ • assignee │
+     ▲                                                                     │ • column↗  │
+     └──────────────────────── assigned to ◀──────────────────────────────│ • board↗   │
+                                                                           └────────────┘
 ```
 
 ### Roles & Permissions Matrix
@@ -189,7 +189,7 @@ server/src/
 
 ## 🔧 Use Cases
 
-Each use case is a **single-responsibility class** that encapsulates one business operation. Dependencies are injected via constructor—making them trivially testable.
+Each use case is a **single-responsibility class** that encapsulates one business operation. Dependencies are injected via constructor, making them trivially testable.
 
 ### Authentication (3 Use Cases)
 
@@ -236,30 +236,30 @@ Each use case is a **single-responsibility class** that encapsulates one busines
 ### Collections & Relationships
 
 ```
-┌──────────────────┐         ┌──────────────────┐
-│   users           │         │   boards          │
-│──────────────────│         │──────────────────│
-│ _id     ObjectId │◀─ ref ──│ owner_id ObjectId │
-│ email   String   │◀─ ref ──│ members  [ObjId]  │
+┌──────────────────┐         ┌────────────────────┐
+│   users          │         │   boards           │
+│──────────────────│         │────────────────────│
+│ _id     ObjectId │◀─ ref ──│ owner_id ObjectId  │
+│ email   String   │◀─ ref ──│ members  [ObjId]   │
 │ password String  │         │ title    String    │
-│ name    String   │         │ _id      ObjectId │
-│ role    Enum     │         └────────┬─────────┘
+│ name    String   │         │ _id      ObjectId  │
+│ role    Enum     │         └────────┬───────────┘
 │ created Date     │                  │
 └──────────────────┘                  │ virtual: columns
                                       │ (foreignField: board_id)
-                              ┌───────▼─────────┐
+                              ┌───────▼───────────┐
                               │   columns         │
-                              │─────────────────│
+                              │───────────────────│
                               │ _id      ObjectId │
                               │ board_id ObjectId │ ← indexed
                               │ title    String   │
                               │ order    Number   │
-                              └───────┬─────────┘
+                              └───────┬───────────┘
                                       │ virtual: tasks
                                       │ (foreignField: column_id)
-                              ┌───────▼─────────┐
+                              ┌───────▼───────────┐
                               │   tasks           │
-                              │─────────────────│
+                              │───────────────────│
                               │ _id         ObjId │
                               │ column_id   ObjId │ ← indexed
                               │ board_id    ObjId │ ← indexed
@@ -268,7 +268,7 @@ Each use case is a **single-responsibility class** that encapsulates one busines
                               │ priority    Enum  │
                               │ assignee_id ObjId │ ← nullable
                               │ order       Num   │
-                              └─────────────────┘
+                              └───────────────────┘
 ```
 
 ### Virtual Population Strategy
@@ -307,14 +307,14 @@ Board.findById(id)
   Client                           Server
     │                                │
     │──── POST /auth/register ─────▶│ ← Validate → Hash password → Store
-    │◀─── { token, user } ─────────│
+    │◀─── { token, user } ──────────│
     │                                │
     │──── POST /auth/login ────────▶│ ← Find user → Compare hash → Issue JWT
-    │◀─── { token, user } ─────────│
+    │◀─── { token, user } ──────────│
     │                                │
     │──── GET /boards ─────────────▶│ ← Extract JWT → Verify → Inject userId
     │     Authorization: Bearer xxx  │
-    │◀─── { boards: [...] } ───────│
+    │◀─── { boards: [...] } ────────│
 ```
 
 ### Security Layers
@@ -398,7 +398,7 @@ Use Case Layer                    Middleware Layer
 
 ## 🔄 Concurrency & Transactions
 
-FlowState uses **Pessimistic Locking** with **MongoDB ACID Transactions** to guarantee data integrity for ordering operations. This is why the Docker setup uses a **Replica Set**—transactions require it.
+FlowState uses **Pessimistic Locking** with **MongoDB ACID Transactions** to guarantee data integrity for ordering operations. This is why the Docker setup uses a **Replica Set**. Transactions require it.
 
 ### Task Creation (Pessimistic Lock)
 
